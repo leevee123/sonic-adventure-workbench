@@ -1,0 +1,4 @@
+{
+  "toolchain": "C:/path/to/toolchain",
+  "build_work": "C:/path/to/build-work"
+}

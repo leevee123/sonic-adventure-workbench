@@ -1,0 +1,194 @@
+[
+  {
+    "repo": "ExpansionPak/ModernGekko",
+    "commit": "a2e4e2b026a68d4848f20ebf16f0e0ddeb573957",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko",
+    "archive_sha256": "b4c784a56ba82a510abd2772c04d2e6365efa3d3711d4d136e6bf9485eee2f7e"
+  },
+  {
+    "repo": "ExpansionPak/RecompCore",
+    "commit": "cf8ceb81b47d6172164cd0572f57aa7624719f33",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin",
+    "archive_sha256": "3c9272b39d502216832bde976a87067a0dbaee2efd34fde2613eee5479a7196f"
+  },
+  {
+    "repo": "libusb/libusb",
+    "commit": "15a7ebb4d426c5ce196684347d2b7cafad862626",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\libusb\\libusb",
+    "archive_sha256": "3415f390df8d841f275c14f4b3b5ca5a4fca893d36ba1d845538e4caa54c2f30"
+  },
+  {
+    "repo": "zlib-ng/zlib-ng",
+    "commit": "ce01b1e41da298334f8214389cc9369540a7560f",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\zlib-ng\\zlib-ng",
+    "archive_sha256": "1967d9d60532b172cc50be8fabf9071c887b9debcde5630aa55851d853937aff"
+  },
+  {
+    "repo": "randy408/libspng",
+    "commit": "fb768002d4288590083a476af628e51c3f1d47cd",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\libspng\\libspng",
+    "archive_sha256": "b76a33303e4d6fbb10b4cfaf5788f4fbdca4c4d409c8c6d2a6902b60df51f2ae"
+  },
+  {
+    "repo": "GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator",
+    "commit": "3bab6924988e5f19bf36586a496156cf72f70d9f",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\VulkanMemoryAllocator",
+    "archive_sha256": "3dd69b9e34c7e06ebbfb2b0ddb72001c10bf884c3f3cc38800adfd537f008985"
+  },
+  {
+    "repo": "epezent/implot",
+    "commit": "3da8bd34299965d3b0ab124df743fe3e076fa222",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\implot\\implot",
+    "archive_sha256": "e9b439a94aa6f09fcf12ed9c2cd784efe5e99e96242122aa683e690b29f7a59f"
+  },
+  {
+    "repo": "mozilla/cubeb",
+    "commit": "54217bca3f3e0cd53c073690a23dd25d83557909",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\cubeb\\cubeb",
+    "archive_sha256": "2ae12e6d6d4b910532f7b67c4dd624b24e8c57c1208756f211e1430ce360d287"
+  },
+  {
+    "repo": "fmtlib/fmt",
+    "commit": "e424e3f2e607da02742f73db84873b8084fc714c",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\fmt\\fmt",
+    "archive_sha256": "48b63758c3b1b8fb2977dafdc5064e680c450b8704e4ee0b645acf865975882a"
+  },
+  {
+    "repo": "lz4/lz4",
+    "commit": "5fc0630a0ed55e9755b0fe3990cd021ae1c3edc1",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\lz4\\lz4",
+    "archive_sha256": "2a7b92281c0be1ada90c91ef2e8cd4474277b7260363c31b2f4b4f75779511cc"
+  },
+  {
+    "repo": "libsdl-org/SDL",
+    "commit": "5848e584a1b606de26e3dbd1c7e4ecbc34f807a6",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\SDL\\SDL",
+    "archive_sha256": "36d490b9edcae463f36bbf0cef2f6959ae3808e7d2b13b0fed348850d1e2abe0"
+  },
+  {
+    "repo": "lsalzman/enet",
+    "commit": "2662c0de09e36f2a2030ccc2c528a3e4c9e8138a",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\enet\\enet",
+    "archive_sha256": "d39d0107cca38ca69732a322ce42e342899fd40f499c8826799733afafac3369"
+  },
+  {
+    "repo": "Cyan4973/xxHash",
+    "commit": "e626a72bc2321cd320e953a0ccf1584cad60f363",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\xxhash\\xxHash",
+    "archive_sha256": "79932b0408d307b64eeaca70dfd3da1a6135b59cda6e9c849cffe095d9f09fac"
+  },
+  {
+    "repo": "libusb/hidapi",
+    "commit": "d6b2a974608dec3b76fb1e36c189f22b9cf3650c",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\hidapi\\hidapi-src",
+    "archive_sha256": "e72b71904604238de9e04e4b456acbb30cb2c65fe96797043e572aff39cb8939"
+  },
+  {
+    "repo": "KhronosGroup/SPIRV-Cross",
+    "commit": "ebe2aa0cd80f5eb5cd8a605da604cacf72205f3b",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\spirv_cross\\SPIRV-Cross",
+    "archive_sha256": "1b41de6349cec60fb72d7089e97ec8fe51b3c8eed97d9e611c71392c1f3e58da"
+  },
+  {
+    "repo": "zlib-ng/minizip-ng",
+    "commit": "55db144e03027b43263e5ebcb599bf0878ba58de",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\minizip-ng\\minizip-ng",
+    "archive_sha256": "281620429b34a29d4569182b0f41e6c9e9c0c716dbd6e7292313511705b435fb"
+  },
+  {
+    "repo": "KhronosGroup/Vulkan-Headers",
+    "commit": "39f924b810e561fd86b2558b6711ca68d4363f68",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\Vulkan-Headers",
+    "archive_sha256": "9865f38de6673277869ae33f02b955c647ae9b4116cf8ec865e0dd75b6e48a9c"
+  },
+  {
+    "repo": "e-dant/watcher",
+    "commit": "b03bdcfc11549df595b77239cefe2643943a3e2f",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\watcher\\watcher",
+    "archive_sha256": "09b4d88bd6c9eb2e3a5ec3ea76722539956324b264692779116312bc5a1beaf7"
+  },
+  {
+    "repo": "syoyo/tinygltf",
+    "commit": "c5641f2c22d117da7971504591a8f6a41ece488b",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\tinygltf\\tinygltf",
+    "archive_sha256": "d99cf141dd35ab0511bbf95fecc721b66657c5fdce34035cb5883f68e6f8d9fc"
+  },
+  {
+    "repo": "curl/curl",
+    "commit": "cfbfb65047e85e6b08af65fe9cdbcf68e9ad496a",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\curl\\curl",
+    "archive_sha256": "111798a8465b43f7316ab2f33af1dd0b080959403c3baca05dbda86f364c175c"
+  },
+  {
+    "repo": "SFML/SFML",
+    "commit": "0fa201c969e48ecc253581c5841ce73f44d42f49",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\SFML\\SFML",
+    "archive_sha256": "2d8d7e72de898dacd44dfa9d6250f0727bd68bb34b79848d72a6504c1a5f14cf"
+  },
+  {
+    "repo": "facebook/zstd",
+    "commit": "711e17da98510a3567bf47f85a08a76f64811474",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\zstd\\zstd",
+    "archive_sha256": "216c08488eafb83d6c8ea9882d07aee5eedd8763b67850bb24b7a96088de2991"
+  },
+  {
+    "repo": "zeux/pugixml",
+    "commit": "ee86beb30e4973f5feffe3ce63bfa4fbadf72f38",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\pugixml\\pugixml",
+    "archive_sha256": "12acd7ee9bc5dfc5d269547c149b55b4cd2fb36943fab038e49bcdfd8c5bc140"
+  },
+  {
+    "repo": "weisslj/cpp-optparse",
+    "commit": "2265d647232249a53a03b411099863ceca35f0d3",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\cpp-optparse\\cpp-optparse",
+    "archive_sha256": "c5a1d8fbe9a7952248847069b273f3acb893565eddc5fcd211141a9a0c8f3d4f"
+  },
+  {
+    "repo": "gitlab:bzip2/bzip2",
+    "commit": "6a8690fc8d26c815e798c588f796eabe9d684cf0",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\bzip2\\bzip2",
+    "archive_sha256": "68255d8fa8996fcb71f9ff88d96f8466526ba8927f603afa298e1d6c73d7a33d"
+  },
+  {
+    "repo": "mutouyun/cpp-ipc",
+    "commit": "ce0773b3e6d5abaa8d104100c5704321113853ca",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\cpp-ipc\\cpp-ipc",
+    "archive_sha256": "e0b90ae3216e6b249053f2247867d149359bd9e0611a16096b51cc9a48507654"
+  },
+  {
+    "repo": "ocornut/imgui",
+    "commit": "45acd5e0e82f4c954432533ae9985ff0e1aad6d5",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\imgui\\imgui",
+    "archive_sha256": "129018078f5d07b6626076f9af994b4cf31f3016c95269b552514740b1129ff2"
+  },
+  {
+    "repo": "microsoft/wil",
+    "commit": "7447d38337abf23a5c2286305b743506455aa9cc",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\wil",
+    "archive_sha256": "bb46a3164b8acc36a78221360110997fbfe79f4125100071c791f5a24f502fec"
+  },
+  {
+    "repo": "ExpansionPak/DolRecomp",
+    "commit": "71ce7f97419b1bb1ba9a9596c41507f6629e0fb0",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\DolRecomp",
+    "archive_sha256": "9fa868a6dd9fff1124dfe565197bd567ea03120371660b625b7690e879dcbaf3"
+  },
+  {
+    "repo": "KhronosGroup/glslang",
+    "commit": "a57276bf558f5cf94d3a9854ebdf5a2236849a5a",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\glslang\\glslang",
+    "archive_sha256": "6675f64409004f6c116e14df5cc2cd3ed211468581b6f7c3ccc970fc2e586eee"
+  },
+  {
+    "repo": "arsenm/sanitizers-cmake",
+    "commit": "aab6948fa863bc1cbe5d0850bc46b9ef02ed4c1a",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\cubeb\\cubeb\\cmake\\sanitizers-cmake",
+    "archive_sha256": "b86b8b1a018e1ac831dcb5088f828da1c08e2ffcd20ffd1c4f15797df472bae0"
+  },
+  {
+    "repo": "google/googletest",
+    "commit": "40412d85124f7c6f3d88454583c4633e5e10fc8c",
+    "path": "outputs\\sonic-adventure-workbench\\native-port\\ModernGekko\\vendor\\dolphin\\Externals\\cubeb\\cubeb\\googletest",
+    "archive_sha256": "41c14a5a4887125fe329235f00c5f92660f245b91bb8dde7c59f9a2540fdec28"
+  }
+]

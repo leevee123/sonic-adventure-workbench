@@ -1,0 +1,332 @@
+{
+  "modules": 268,
+  "unresolved_relocations": [
+    {
+      "module_id": 191,
+      "file": "ev00c3.rel",
+      "section": 1,
+      "offset": 35080,
+      "patch_address": 2160748264,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952649,
+      "target_address": 2419449481,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562048
+    },
+    {
+      "module_id": 191,
+      "file": "ev00c3.rel",
+      "section": 1,
+      "offset": 35284,
+      "patch_address": 2160748468,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952648,
+      "target_address": 2419449480,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562080
+    },
+    {
+      "module_id": 209,
+      "file": "ev00e2.rel",
+      "section": 1,
+      "offset": 31304,
+      "patch_address": 2160999592,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952649,
+      "target_address": 2419449481,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562112
+    },
+    {
+      "module_id": 209,
+      "file": "ev00e2.rel",
+      "section": 1,
+      "offset": 31508,
+      "patch_address": 2160999796,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952648,
+      "target_address": 2419449480,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562144
+    },
+    {
+      "module_id": 215,
+      "file": "ev00f5.rel",
+      "section": 1,
+      "offset": 34132,
+      "patch_address": 2161105524,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952649,
+      "target_address": 2419449481,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562176
+    },
+    {
+      "module_id": 215,
+      "file": "ev00f5.rel",
+      "section": 1,
+      "offset": 34336,
+      "patch_address": 2161105728,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952648,
+      "target_address": 2419449480,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562208
+    },
+    {
+      "module_id": 252,
+      "file": "ev016a.rel",
+      "section": 1,
+      "offset": 15956,
+      "patch_address": 2161413748,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952649,
+      "target_address": 2419449481,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562240
+    },
+    {
+      "module_id": 252,
+      "file": "ev016a.rel",
+      "section": 1,
+      "offset": 16160,
+      "patch_address": 2161413952,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952648,
+      "target_address": 2419449480,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562272
+    },
+    {
+      "module_id": 253,
+      "file": "ev016b.rel",
+      "section": 1,
+      "offset": 15872,
+      "patch_address": 2161436128,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952649,
+      "target_address": 2419449481,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562304
+    },
+    {
+      "module_id": 253,
+      "file": "ev016b.rel",
+      "section": 1,
+      "offset": 16076,
+      "patch_address": 2161436332,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952648,
+      "target_address": 2419449480,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562336
+    },
+    {
+      "module_id": 256,
+      "file": "ev016e.rel",
+      "section": 1,
+      "offset": 15760,
+      "patch_address": 2161465168,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952649,
+      "target_address": 2419449481,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562368
+    },
+    {
+      "module_id": 256,
+      "file": "ev016e.rel",
+      "section": 1,
+      "offset": 15964,
+      "patch_address": 2161465372,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952648,
+      "target_address": 2419449480,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562400
+    },
+    {
+      "module_id": 257,
+      "file": "ev016f.rel",
+      "section": 1,
+      "offset": 15896,
+      "patch_address": 2161487576,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952649,
+      "target_address": 2419449481,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562432
+    },
+    {
+      "module_id": 257,
+      "file": "ev016f.rel",
+      "section": 1,
+      "offset": 16100,
+      "patch_address": 2161487780,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952648,
+      "target_address": 2419449480,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562464
+    },
+    {
+      "module_id": 258,
+      "file": "ev0170.rel",
+      "section": 1,
+      "offset": 15812,
+      "patch_address": 2161509892,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952649,
+      "target_address": 2419449481,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562496
+    },
+    {
+      "module_id": 258,
+      "file": "ev0170.rel",
+      "section": 1,
+      "offset": 16016,
+      "patch_address": 2161510096,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952648,
+      "target_address": 2419449480,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562528
+    },
+    {
+      "module_id": 259,
+      "file": "ev0171.rel",
+      "section": 1,
+      "offset": 15816,
+      "patch_address": 2161532232,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952649,
+      "target_address": 2419449481,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562560
+    },
+    {
+      "module_id": 259,
+      "file": "ev0171.rel",
+      "section": 1,
+      "offset": 16020,
+      "patch_address": 2161532436,
+      "type": 10,
+      "target_module": 1,
+      "target_section": 6,
+      "addend": 1952648,
+      "target_address": 2419449480,
+      "reason": "branch targets non-code or an unaligned address",
+      "analysis_stub": 2161562592
+    }
+  ],
+  "analysis_stubs": [
+    {
+      "name": "UNRESOLVED_m191_s1_8908",
+      "address": 2161562048
+    },
+    {
+      "name": "UNRESOLVED_m191_s1_89D4",
+      "address": 2161562080
+    },
+    {
+      "name": "UNRESOLVED_m209_s1_7A48",
+      "address": 2161562112
+    },
+    {
+      "name": "UNRESOLVED_m209_s1_7B14",
+      "address": 2161562144
+    },
+    {
+      "name": "UNRESOLVED_m215_s1_8554",
+      "address": 2161562176
+    },
+    {
+      "name": "UNRESOLVED_m215_s1_8620",
+      "address": 2161562208
+    },
+    {
+      "name": "UNRESOLVED_m252_s1_3E54",
+      "address": 2161562240
+    },
+    {
+      "name": "UNRESOLVED_m252_s1_3F20",
+      "address": 2161562272
+    },
+    {
+      "name": "UNRESOLVED_m253_s1_3E00",
+      "address": 2161562304
+    },
+    {
+      "name": "UNRESOLVED_m253_s1_3ECC",
+      "address": 2161562336
+    },
+    {
+      "name": "UNRESOLVED_m256_s1_3D90",
+      "address": 2161562368
+    },
+    {
+      "name": "UNRESOLVED_m256_s1_3E5C",
+      "address": 2161562400
+    },
+    {
+      "name": "UNRESOLVED_m257_s1_3E18",
+      "address": 2161562432
+    },
+    {
+      "name": "UNRESOLVED_m257_s1_3EE4",
+      "address": 2161562464
+    },
+    {
+      "name": "UNRESOLVED_m258_s1_3DC4",
+      "address": 2161562496
+    },
+    {
+      "name": "UNRESOLVED_m258_s1_3E90",
+      "address": 2161562528
+    },
+    {
+      "name": "UNRESOLVED_m259_s1_3DC8",
+      "address": 2161562560
+    },
+    {
+      "name": "UNRESOLVED_m259_s1_3E94",
+      "address": 2161562592
+    }
+  ],
+  "note": "Unresolved branch calls use explicitly named analysis stubs. These substitutions are for pseudocode inspection only; original inputs are unchanged."
+}

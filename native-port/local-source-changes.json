@@ -1,0 +1,34 @@
+[
+  {
+    "file": "src/runtime/dolphin_runtime.cpp",
+    "sha256": "aed3dfc4ade5518b16c5a774a77b34fcbba6f72bc6dd8223c5c734d8754ca40c"
+  },
+  {
+    "file": "src/runtime/game.cpp",
+    "sha256": "522669fe0f0285b03795735307936b25f3739feaa95b38b658ba2dcec4019144"
+  },
+  {
+    "file": "include/moderngekko/game.hpp",
+    "sha256": "a8fb8c4e0f8e590d1e62768834822520cf82d6d6e1d8746d740a1fe15fee3571"
+  },
+  {
+    "file": "tools/moderngekko_run.cpp",
+    "sha256": "25527439da6161878463a5541be1c63baccc78134212cf6f762fa2e8d8c75e87"
+  },
+  {
+    "file": "tests/game_inspect_test.cpp",
+    "sha256": "ad41d14cc6f6f7dd895cc424b0bd46f45774a29b15bc750fd879cd7bf4058e4b"
+  },
+  {
+    "file": "vendor/dolphin/Source/Core/DolphinNoGUI/Platform.h",
+    "sha256": "88bd0ff59a0e8c754b34055e93130e5e09d00ee2b1edb1b2e3c0ca4992222b2c"
+  },
+  {
+    "file": "vendor/dolphin/Source/Core/DolphinNoGUI/PlatformWin32.cpp",
+    "sha256": "6009caab7784874f0964fe1e7a6bf2c35b47e4ae0626ac44ed60cf02f91dd1bb"
+  },
+  {
+    "file": "vendor/dolphin/Source/Core/Core/HW/SI/SI_DeviceGCController.cpp",
+    "sha256": "ce2b2c4007118d4dd4f8b9df93855387c8da768371ade8044082691cd74f3db3"
+  }
+]

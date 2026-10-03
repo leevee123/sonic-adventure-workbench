@@ -1,0 +1,80 @@
+[
+  {
+    "name": "MAIN_.text0",
+    "start": "80003100",
+    "size": 9664,
+    "execute": true
+  },
+  {
+    "name": "MAIN_.data0",
+    "start": "800056c0",
+    "size": 256,
+    "execute": false
+  },
+  {
+    "name": "MAIN_.data1",
+    "start": "800057c0",
+    "size": 224,
+    "execute": false
+  },
+  {
+    "name": "MAIN_.text1",
+    "start": "800058a0",
+    "size": 461824,
+    "execute": true
+  },
+  {
+    "name": "MAIN_.data2",
+    "start": "800764a0",
+    "size": 32,
+    "execute": false
+  },
+  {
+    "name": "MAIN_.data3",
+    "start": "800764c0",
+    "size": 32,
+    "execute": false
+  },
+  {
+    "name": "MAIN_.data4",
+    "start": "800764e0",
+    "size": 14208,
+    "execute": false
+  },
+  {
+    "name": "MAIN_.data5",
+    "start": "80079c60",
+    "size": 48832,
+    "execute": false
+  },
+  {
+    "name": "MAIN_uninitialized0",
+    "start": "80085b20",
+    "size": 254784,
+    "execute": false
+  },
+  {
+    "name": "MAIN_.data6",
+    "start": "800c3e60",
+    "size": 544,
+    "execute": false
+  },
+  {
+    "name": "MAIN_uninitialized1",
+    "start": "800c4080",
+    "size": 1536,
+    "execute": false
+  },
+  {
+    "name": "MAIN_.data7",
+    "start": "800c4680",
+    "size": 2752,
+    "execute": false
+  },
+  {
+    "name": "MAIN_uninitialized2",
+    "start": "800c5140",
+    "size": 8,
+    "execute": false
+  }
+]

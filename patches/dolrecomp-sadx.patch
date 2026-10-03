@@ -1,0 +1,315 @@
+--- a/src/frontend/container/rel.c
++++ b/src/frontend/container/rel.c
+@@ -353,14 +353,18 @@
+             }
+ 
+             RELSection* patch_section = &rel->sections[current_section_index];
+-            u32 target;
+-            u32 patch_address;
++            u32 target = 0;
++            u32 patch_address = 0;
+             if (!relocation_target(rel, modules, import_module, section_index,
+                                    symbol_offset, &target) ||
+                 !section_address_at(rel, current_section_index, current_offset,
+                                     &patch_address) ||
+                 !apply_relocation(patch_section, current_offset, patch_address,
+                                   type, target)) {
++                fprintf(stderr, "error: module %u section %u offset 0x%X relocation %u imports %u section %u offset 0x%X (patch 0x%08X -> target 0x%08X)\n",
++                        rel->module_id, current_section_index, current_offset,
++                        type, import_module, section_index, symbol_offset,
++                        patch_address, target);
+                 return false;
+             }
+             rel->relocation_count++;
+@@ -402,8 +406,8 @@
+     rel->prolog_offset = read_be32(h + 0x34);
+     rel->epilog_offset = read_be32(h + 0x38);
+     rel->unresolved_offset = read_be32(h + 0x3C);
+-    u32 section_alignment = rel->file_size >= 0x44 ? read_be32(h + 0x40) : 4;
+-    u32 bss_alignment = rel->file_size >= 0x48 ? read_be32(h + 0x44) : 4;
++    u32 section_alignment = rel->version >= 2 && rel->file_size >= 0x44 ? read_be32(h + 0x40) : 4;
++    u32 bss_alignment = rel->version >= 2 && rel->file_size >= 0x48 ? read_be32(h + 0x44) : 4;
+     rel->base_address = base_address;
+ 
+     if (rel->section_count == 0 ||
+@@ -438,7 +442,6 @@
+         return false;
+     }
+ 
+-    u32 executable_count = 0;
+     for (u32 i = 0; i < rel->section_count; i++) {
+         const u8* entry = rel->file_data + section_info_offset +
+                           i * REL_SECTION_ENTRY_SIZE;
+@@ -493,9 +496,12 @@
+             rel_free(rel);
+             return false;
+         }
+-        if (section_alignment > 1 && executable &&
+-            (section->address % section_alignment) != 0) {
+-            fprintf(stderr, "error: REL executable section %u is not aligned\n", i);
++        // The REL header constrains the module allocation, while individual
++        // executable sections require the instruction alignment checked above.
++        // Retail SADX has eight-byte module alignment and text offsets 4 mod 8.
++        if (section_alignment > 1 &&
++            (base_address % section_alignment) != 0) {
++            fprintf(stderr, "error: REL module allocation is not aligned\n");
+             rel_free(rel);
+             return false;
+         }
+@@ -508,15 +514,9 @@
+         }
+         memcpy(section->owned_data, rel->file_data + offset, size);
+         section->data = section->owned_data;
+-        if (executable)
+-            executable_count++;
+-    }
+-
+-    if (executable_count == 0) {
+-        fprintf(stderr, "error: REL has no executable sections\n");
+-        rel_free(rel);
+-        return false;
+-    }
++    }
++
++    // Data-only RELs are valid modules and can be relocation targets for code.
+ 
+     if (!validate_entry(rel, rel->prolog_section, rel->prolog_offset, "prolog") ||
+         !validate_entry(rel, rel->epilog_section, rel->epilog_offset, "epilog") ||
+--- a/src/app/cli.h
++++ b/src/app/cli.h
+@@ -19,6 +19,7 @@
+     const char* profile_generate_path;
+     const char* profile_use_path;
+     const char* option_sites_path;
++    const char* rel_section_map;
+     DolRecompCPU cpu;
+     DolRecompBackend backend;
+     u32 jobs;
+--- a/src/app/cli.c
++++ b/src/app/cli.c
+@@ -25,6 +25,7 @@
+     fprintf(stderr, "  --partition-seed <n>           Stable partition naming seed\n");
+     fprintf(stderr, "  --gamecube                     GameCube mode (no title ID required)\n");
+     fprintf(stderr, "  --rel-base <addr>              Override first virtual load address for REL codegen\n");
++    fprintf(stderr, "  --rel-section-map <path>       Explicit module-id section-index address layout (REL directory)\n");
+     fprintf(stderr, "  --map <path>                   Load optional function names from a linker MAP\n");
+     fprintf(stderr, "  --option-sites <path>          Emit runtime-switched alternatives at listed sites (C backend)\n");
+     fprintf(stderr, "  --setup                        Download titles database and optionally install wit\n");
+@@ -397,6 +398,14 @@
+             continue;
+         }
+ 
++        if (strcmp(arg, "--rel-section-map") == 0) {
++            if (i + 1 >= argc) {
++                fprintf(stderr, "error: --rel-section-map needs a path\n");
++                return 0;
++            }
++            opts->rel_section_map = argv[++i];
++            continue;
++        }
+         if (strcmp(arg, "--rel-base") == 0) {
+             if (i + 1 >= argc) {
+                 fprintf(stderr, "error: --rel-base needs an address\n");
+--- a/src/app/pipeline.c
++++ b/src/app/pipeline.c
+@@ -1420,6 +1420,11 @@
+         section->embedded_data_mode = EMBEDDED_DATA_DOL;
+     }
+ 
++    if (section_count == 0) {
++        printf("data-only REL: retained in relocation map; no CPU code to emit\n");
++        free(sections);
++        return 1;
++    }
+     int ok = emit_code_sections_split(sections, section_count, output_path, cpu,
+                                       rel->entry_point, jobs, local_chunks_dir,
+                                       NULL, options);
+@@ -1429,6 +1434,7 @@
+ 
+ typedef struct {
+     RELFile rel;
++    int relocated_ok;
+ } RELBatchItem;
+ 
+ void rel_batch_free(RELBatchItem* items, u32 count) {
+@@ -1521,10 +1527,48 @@
+             goto done;
+     }
+ 
++    if (options->rel_section_map) {
++        FILE* layout = fopen(options->rel_section_map, "r");
++        if (!layout) {
++            fprintf(stderr, "error: cannot open REL section map\n");
++            goto done;
++        }
++        unsigned module, section, address;
++        int fields;
++        while ((fields = fscanf(layout, "%u %u %x", &module, &section, &address)) == 3) {
++            RELFile* match = NULL;
++            for (u32 i = 0; i < paths.count; i++)
++                if (items[i].rel.module_id == module) match = &items[i].rel;
++            if (!match || section >= match->section_count ||
++                address > 0xFFFFFFFFu - match->sections[section].size ||
++                (match->sections[section].executable && (address & 3u))) {
++                fprintf(stderr, "error: invalid REL section map entry %u %u\n", module, section);
++                fclose(layout);
++                goto done;
++            }
++            match->sections[section].address = address;
++        }
++        fclose(layout);
++        if (fields != EOF) {
++            fprintf(stderr, "error: malformed REL section map\n");
++            goto done;
++        }
++        for (u32 i = 0; i < paths.count; i++) {
++            RELFile* rel = &items[i].rel;
++            if (rel->prolog_section)
++                rel->entry_point = rel->sections[rel->prolog_section].address + rel->prolog_offset;
++        }
++    }
++    int invalid_modules = 0;
+     RELModuleMap map = { map_entries, paths.count };
+     for (u32 i = 0; i < paths.count; i++) {
+-        if (!rel_apply_relocations(&items[i].rel, &map))
+-            goto done;
++        items[i].relocated_ok = rel_apply_relocations(&items[i].rel, &map);
++        if (!items[i].relocated_ok) {
++            if (!options->rel_section_map) goto done;
++            fprintf(stderr, "module %u excluded from codegen because relocation validation failed\n",
++                    items[i].rel.module_id);
++            invalid_modules++;
++        }
+     }
+ 
+     if (!build_generated_folder_path(output_root, title_id, titleless_mode,
+@@ -1533,6 +1577,7 @@
+     }
+ 
+     for (u32 i = 0; i < paths.count; i++) {
++        if (!items[i].relocated_ok) continue;
+         char rel_output_path[1200];
+         printf("\nREL %u/%u: %s\n", i + 1, paths.count, paths.paths[i]);
+         rel_print_info(&items[i].rel, NULL);
+@@ -1547,7 +1592,10 @@
+             goto done;
+     }
+ 
+-    ok = 1;
++    ok = invalid_modules == 0;
++    if (invalid_modules)
++        fprintf(stderr, "partial translation: %d module(s) excluded; generated code is incomplete\n",
++                invalid_modules);
+ 
+ done:
+     free(map_entries);
+--- a/tests/test_rel.c
++++ b/tests/test_rel.c
+@@ -194,6 +194,61 @@
+     return 1;
+ }
+ 
++static int patch_word(const char* path, long offset, u32 word) {
++    FILE* file = fopen(path, "r+b");
++    u8 bytes[4];
++    write_be32(bytes, word);
++    if (!file) return 0;
++    int ok = fseek(file, offset, SEEK_SET) == 0 &&
++             fwrite(bytes, 1, 4, file) == 4;
++    return fclose(file) == 0 && ok;
++}
++
++static int test_module_alignment_not_text_alignment(void) {
++    const char* path = "test_sadx_alignment.rel";
++    CHECK(write_sample_rel(path, 1, R_PPC_ADDR32, 2, 0, 8) &&
++          patch_word(path, 0x40, 8) && patch_word(path, 0x58, 0x105) &&
++          patch_word(path, 0x60, 0x10C), "failed to write SADX alignment fixture");
++    RELFile rel;
++    CHECK(rel_load_image(&rel, path, 0x80500000u),
++          "eight-byte module allocation must permit four-byte-aligned text");
++    CHECK(rel.sections[1].address == 0x80500104u, "incorrect section address");
++    rel_free(&rel);
++    CHECK(!rel_load_image(&rel, path, 0x80500004u),
++          "misaligned module allocation must still be rejected");
++    remove(path);
++    return 1;
++}
++
++static int test_data_only_module(void) {
++    const char* path = "test_data_only.rel";
++    CHECK(write_sample_rel(path, 1, R_PPC_ADDR32, 2, 0, 8) &&
++          patch_word(path, 0x58, 0x100) && patch_word(path, 0x30, 0),
++          "failed to write data-only fixture");
++    RELFile rel;
++    CHECK(rel_load(&rel, path, 0x80500000u), "valid data-only module rejected");
++    CHECK(rel.entry_point == 0 && !rel.sections[1].executable,
++          "data-only module acquired a code entry point");
++    CHECK(read_be32(rel.sections[1].data) == 0x80500108u,
++          "data-only relocation was not applied");
++    rel_free(&rel);
++    remove(path);
++    return 1;
++}
++
++static int test_v1_has_no_alignment_fields(void) {
++    const char* path = "test_v1.rel";
++    CHECK(write_sample_rel(path, 1, R_PPC_ADDR32, 2, 0, 8) &&
++          patch_word(path, 0x1C, 1) && patch_word(path, 0x40, 0xDEADBEEF),
++          "failed to write v1 fixture");
++    RELFile rel;
++    CHECK(rel_load_image(&rel, path, 0x80500000u),
++          "v1 module must not interpret later header fields as alignment");
++    rel_free(&rel);
++    remove(path);
++    return 1;
++}
++
+ int main(void) {
+     int ok = 1;
+     ok &= test_self_relocation();
+@@ -202,6 +257,9 @@
+     ok &= test_external_import_rejected();
+     ok &= test_external_import_with_map();
+     ok &= test_unaligned_text_rejected();
++    ok &= test_module_alignment_not_text_alignment();
++    ok &= test_data_only_module();
++    ok &= test_v1_has_no_alignment_fields();
+ 
+     if (!ok)
+         return 1;
+--- a/tests/test_option_sites.c
++++ b/tests/test_option_sites.c
+@@ -27,7 +27,11 @@
+ }
+ 
+ int main(void) {
++#ifdef _WIN32
++    char path[] = "dolrecomp_option_sites_XXXXXX";
++#else
+     char path[] = "/tmp/dolrecomp_option_sites_XXXXXX";
++#endif
+     const int fd = mkstemp(path);
+     if (fd < 0)
+         return 1;
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -279,6 +279,7 @@
+         -DHOST_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+         -DHOST_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+         -DHOST_C_COMPILER=${CMAKE_C_COMPILER}
++        -DHOST_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+         -DHOST_BUILD_CONFIG=$<CONFIG>
+         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/codegen_compile.cmake
+ )
+--- a/tests/cmake/codegen_compile.cmake
++++ b/tests/cmake/codegen_compile.cmake
+@@ -84,6 +84,9 @@
+ ")
+ 
+ set(configure_args -S "${check_src_dir}" -B "${check_build_dir}")
++if(DEFINED HOST_MAKE_PROGRAM AND NOT HOST_MAKE_PROGRAM STREQUAL "")
++    list(APPEND configure_args "-DCMAKE_MAKE_PROGRAM=${HOST_MAKE_PROGRAM}")
++endif()
+ if(DEFINED HOST_GENERATOR AND NOT HOST_GENERATOR STREQUAL "")
+     list(APPEND configure_args -G "${HOST_GENERATOR}")
+ endif()

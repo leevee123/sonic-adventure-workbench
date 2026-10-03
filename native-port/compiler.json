@@ -1,0 +1,11 @@
+{
+  "family": "llvm-mingw",
+  "version": "23.1.2",
+  "executable": "C:/Users/naync/Documents/Codex/2026-10-01/https-github-com-chasmlol-skycraft-https/work/toolchain/llvm-mingw-20260922-ucrt-x86_64/bin/clang.exe",
+  "sha256": "20ba1856942744291a6aaaf9f2c94f6d0cd7cac5aa9557fce96471dc7ef25d6f",
+  "moduleBuild": "Release -O3 -flto=thin -ffp-contract=off -fno-fast-math",
+  "cpuAbi": 4,
+  "moduleAbi": 3,
+  "buildHelper": "build_module_clang.py",
+  "requiresAdditionalDlls": false
+}

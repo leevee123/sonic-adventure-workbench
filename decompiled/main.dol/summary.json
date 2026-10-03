@@ -1,0 +1,15 @@
+{
+  "program": "main.dol",
+  "language": "PowerPC:BE:32:Gekko_Broadway",
+  "reference_functions": 2082,
+  "imported_symbols": 2082,
+  "functions": 2096,
+  "decompiled": 2096,
+  "failures": [],
+  "symbol_errors": [],
+  "analysis": {
+    "session_id": "56e71139ce414a8baffc112f5114a639",
+    "status": "completed",
+    "log": ""
+  }
+}

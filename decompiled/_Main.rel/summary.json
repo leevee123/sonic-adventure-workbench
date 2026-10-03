@@ -1,0 +1,15 @@
+{
+  "program": "_Main.rel",
+  "language": "PowerPC:BE:32:Gekko_Broadway",
+  "reference_functions": 30438,
+  "imported_symbols": 30438,
+  "functions": 30473,
+  "decompiled": 30473,
+  "failures": [],
+  "symbol_errors": [],
+  "analysis": {
+    "session_id": "39ddb1f5253a4259bd8885977afb70eb",
+    "status": "completed",
+    "log": ""
+  }
+}
