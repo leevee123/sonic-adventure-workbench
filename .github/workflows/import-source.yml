@@ -1,0 +1,52 @@
+name: Import complete workbench source
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_ASSET: sonic-adventure-workbench-all-source-v0.2.1.zip
+    steps:
+      - name: Retrieve the reviewed release source
+        run: |
+          gh auth setup-git
+          gh repo clone "$GITHUB_REPOSITORY" workbench
+          gh release download v0.2.1 --repo "$GITHUB_REPOSITORY" --pattern "$SOURCE_ASSET" --pattern SHA256SUMS.txt --dir "$RUNNER_TEMP/source"
+      - name: Verify and import source
+        working-directory: workbench
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,shutil,zipfile
+          root=pathlib.Path.cwd().resolve()
+          bundle=pathlib.Path(os.environ["RUNNER_TEMP"])/"source"/os.environ["SOURCE_ASSET"]
+          sums=(bundle.parent/"SHA256SUMS.txt").read_text().splitlines()
+          expected=next(line.split()[0] for line in sums if line.endswith(os.environ["SOURCE_ASSET"]))
+          assert hashlib.sha256(bundle.read_bytes()).hexdigest()==expected
+          with zipfile.ZipFile(bundle) as archive:
+              manifest=json.loads(archive.read("sonic-adventure-workbench/source-manifest.json"))
+              for row in manifest["files"]:
+                  relative=pathlib.PurePosixPath(row["file"])
+                  assert not relative.is_absolute() and ".." not in relative.parts
+                  target=(root/pathlib.Path(*relative.parts)).resolve()
+                  assert target.is_relative_to(root)
+                  if row["file"]=="README.md":
+                      target=root/"WORKBENCH.md"
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  with archive.open("sonic-adventure-workbench/"+row["file"]) as source, target.open("wb") as output:
+                      shutil.copyfileobj(source,output)
+                  assert target.stat().st_size==row["bytes"]
+              (root/"source-manifest.json").write_text(json.dumps(manifest,indent=2)+"\n")
+              (root/"local-paths.example.json").write_bytes(archive.read("sonic-adventure-workbench/local-paths.example.json"))
+          print(f'Imported {manifest["file_count"]} source files.')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "Import complete workbench source and fixed Xbox launcher"
+            git push origin HEAD:main
+          fi
