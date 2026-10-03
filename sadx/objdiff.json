@@ -1,0 +1,592 @@
+{
+  "min_version": "0.4.3",
+  "custom_make": "ninja",
+  "build_target": false,
+  "watch_patterns": [
+    "*.c",
+    "*.cp",
+    "*.cpp",
+    "*.h",
+    "*.hpp",
+    "*.inc",
+    "*.py",
+    "*.yml",
+    "*.txt",
+    "*.json"
+  ],
+  "units": [
+    {
+      "name": "main/Runtime.PPCEABI.H/__va_arg",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/__va_arg.o",
+      "base_path": "build/GXSE8P/src/Runtime.PPCEABI.H/__va_arg.o",
+      "reverse_fn_order": true,
+      "complete": true
+    },
+    {
+      "name": "main/Runtime.PPCEABI.H/global_destructor_chain",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/global_destructor_chain.o",
+      "base_path": "build/GXSE8P/src/Runtime.PPCEABI.H/global_destructor_chain.o",
+      "reverse_fn_order": true,
+      "complete": true
+    },
+    {
+      "name": "main/Runtime.PPCEABI.H/__mem",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/__mem.o",
+      "base_path": "build/GXSE8P/src/Runtime.PPCEABI.H/__mem.o",
+      "reverse_fn_order": true,
+      "complete": true
+    },
+    {
+      "name": "main/Runtime.PPCEABI.H/New",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/New.o"
+    },
+    {
+      "name": "main/Runtime.PPCEABI.H/NewMore",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/NewMore.o"
+    },
+    {
+      "name": "main/Runtime.PPCEABI.H/NMWException",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/NMWException.o"
+    },
+    {
+      "name": "main/Runtime.PPCEABI.H/runtime",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/runtime.o",
+      "base_path": "build/GXSE8P/src/Runtime.PPCEABI.H/runtime.o",
+      "reverse_fn_order": true,
+      "complete": true
+    },
+    {
+      "name": "main/Runtime.PPCEABI.H/__init_cpp_exceptions",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/__init_cpp_exceptions.o",
+      "base_path": "build/GXSE8P/src/Runtime.PPCEABI.H/__init_cpp_exceptions.o",
+      "reverse_fn_order": true,
+      "complete": true
+    },
+    {
+      "name": "main/Runtime.PPCEABI.H/Gecko_ExceptionPPC",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/Gecko_ExceptionPPC.o"
+    },
+    {
+      "name": "main/Runtime.PPCEABI.H/GCN_mem_alloc",
+      "target_path": "build/GXSE8P/obj/Runtime.PPCEABI.H/GCN_mem_alloc.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/PPC_EABI/abort_exit",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/PPC_EABI/abort_exit.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/alloc",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/alloc.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/errno",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/errno.o",
+      "base_path": "build/GXSE8P/src/MSL_C.PPCEABI.bare.H/MSL_Common/errno.o",
+      "reverse_fn_order": true,
+      "complete": true
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/ansi_files",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/ansi_files.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/ansi_fp",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/ansi_fp.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/buffer_io",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/buffer_io.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/ctype",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/ctype.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/locale",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/locale.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/direct_io",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/direct_io.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/file_io",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/file_io.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/FILE_POS",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/FILE_POS.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/mbstring",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/mbstring.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/mem",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/mem.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/mem_funcs",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/mem_funcs.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/misc_io",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/misc_io.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/printf",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/printf.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/rand",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/rand.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/float",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/float.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/scanf",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/scanf.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/signal",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/signal.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/string",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/string.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/strtold",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/strtold.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/strtoul",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/strtoul.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/PPC_EABI/uart_console_io",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/PPC_EABI/uart_console_io.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common/wchar_io",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common/wchar_io.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_acos",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_acos.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_asin",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_asin.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_atan2",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_atan2.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_log",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_log.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_log10",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_log10.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_pow",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_pow.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_rem_pio2",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/e_rem_pio2.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/k_cos",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/k_cos.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/k_rem_pio2",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/k_rem_pio2.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/k_sin",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/k_sin.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/k_tan",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/k_tan.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_atan",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_atan.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_ceil",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_ceil.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_copysign",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_copysign.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_cos",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_cos.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_floor",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_floor.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_frexp",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_frexp.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_ldexp",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_ldexp.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_modf",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_modf.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_nextafter",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_nextafter.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_sin",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_sin.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_tan",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/s_tan.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_acos",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_acos.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_asin",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_asin.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_atan2",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_atan2.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_log",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_log.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_log10",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_log10.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_pow",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/MSL_Common_Embedded/Math/Double_precision/w_pow.o"
+    },
+    {
+      "name": "main/MSL_C.PPCEABI.bare.H/PPC_EABI/math_ppc",
+      "target_path": "build/GXSE8P/obj/MSL_C.PPCEABI.bare.H/PPC_EABI/math_ppc.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/mainloop",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/mainloop.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/nubevent",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/nubevent.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/nubinit",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/nubinit.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/msg",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/msg.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/msgbuf",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/msgbuf.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/serpoll",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/serpoll.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/usr_put",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/usr_put.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/dispatch",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/dispatch.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/msghndlr",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/msghndlr.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/support",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/support.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/mutex_TRK",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/mutex_TRK.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/notify",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/notify.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/ppc/Generic/flush_cache",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/ppc/Generic/flush_cache.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/mem_TRK",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/mem_TRK.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/ppc/Generic/targimpl",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/ppc/Generic/targimpl.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/ppc/Export/targsupp",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/ppc/Export/targsupp.o",
+      "base_path": "build/GXSE8P/mod/TRK_MINNOW_DOLPHIN/ppc/Export/targsupp.o",
+      "reverse_fn_order": true,
+      "complete": true
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/ppc/Generic/__exception",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/ppc/Generic/__exception.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Os/dolphin/dolphin_trk",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Os/dolphin/dolphin_trk.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/ppc/Generic/mpc_7xx_603e",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/ppc/Generic/mpc_7xx_603e.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Portable/main_TRK",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Portable/main_TRK.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Os/dolphin/dolphin_trk_glue",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Os/dolphin/dolphin_trk_glue.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Os/dolphin/targcont",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Os/dolphin/targcont.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/Os/dolphin/target_options",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/Os/dolphin/target_options.o"
+    },
+    {
+      "name": "main/TRK_MINNOW_DOLPHIN/MetroTRK/Export/mslsupp",
+      "target_path": "build/GXSE8P/obj/TRK_MINNOW_DOLPHIN/MetroTRK/Export/mslsupp.o"
+    },
+    {
+      "name": "main/Dolphin/AI/ai",
+      "target_path": "build/GXSE8P/obj/Dolphin/AI/ai.o"
+    },
+    {
+      "name": "main/Dolphin/AMCStubs/AmcExi2Stubs",
+      "target_path": "build/GXSE8P/obj/Dolphin/AMCStubs/AmcExi2Stubs.o"
+    },
+    {
+      "name": "main/Dolphin/AR/ar",
+      "target_path": "build/GXSE8P/obj/Dolphin/AR/ar.o"
+    },
+    {
+      "name": "main/Dolphin/AR/arq",
+      "target_path": "build/GXSE8P/obj/Dolphin/AR/arq.o"
+    },
+    {
+      "name": "main/Dolphin/AX/AX",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/AX.o"
+    },
+    {
+      "name": "main/Dolphin/AX/AXAlloc",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/AXAlloc.o"
+    },
+    {
+      "name": "main/Dolphin/AX/AXAux",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/AXAux.o"
+    },
+    {
+      "name": "main/Dolphin/AX/AXCL",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/AXCL.o"
+    },
+    {
+      "name": "main/Dolphin/AX/AXOut",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/AXOut.o"
+    },
+    {
+      "name": "main/Dolphin/AX/AXSPB",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/AXSPB.o"
+    },
+    {
+      "name": "main/Dolphin/AX/AXVPB",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/AXVPB.o"
+    },
+    {
+      "name": "main/Dolphin/AX/AXComp",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/AXComp.o"
+    },
+    {
+      "name": "main/Dolphin/AX/DSPCode",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/DSPCode.o"
+    },
+    {
+      "name": "main/Dolphin/AX/AXProf",
+      "target_path": "build/GXSE8P/obj/Dolphin/AX/AXProf.o"
+    },
+    {
+      "name": "main/Dolphin/AXFX/reverb_hi",
+      "target_path": "build/GXSE8P/obj/Dolphin/AXFX/reverb_hi.o"
+    },
+    {
+      "name": "main/Dolphin/AXFX/reverb_std",
+      "target_path": "build/GXSE8P/obj/Dolphin/AXFX/reverb_std.o"
+    },
+    {
+      "name": "main/Dolphin/AXFX/chorus",
+      "target_path": "build/GXSE8P/obj/Dolphin/AXFX/chorus.o"
+    },
+    {
+      "name": "main/Dolphin/AXFX/delay",
+      "target_path": "build/GXSE8P/obj/Dolphin/AXFX/delay.o"
+    },
+    {
+      "name": "main/Dolphin/AXFX/axfx",
+      "target_path": "build/GXSE8P/obj/Dolphin/AXFX/axfx.o"
+    },
+    {
+      "name": "main/Dolphin/BASE/PPCArch",
+      "target_path": "build/GXSE8P/obj/Dolphin/BASE/PPCArch.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDBios",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDBios.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDUnlock",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDUnlock.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDRdwr",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDRdwr.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDBlock",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDBlock.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDDir",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDDir.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDCheck",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDCheck.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDMount",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDMount.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDFormat",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDFormat.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDOpen",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDOpen.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDCreate",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDCreate.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDRead",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDRead.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDWrite",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDWrite.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDDelete",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDDelete.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDStat",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDStat.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDStatEx",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDStatEx.o"
+    },
+    {
+      "name": "main/Dolphin/CARD/CARDNet",
+      "target_path": "build/GXSE8P/obj/Dolphin/CARD/CARDNet.o"
+    },
+    {
+      "name": "main/Dolphin/DB/db",
+      "target_path": "build/GXSE8P/obj/Dolphin/DB/db.o"
+    },
+    {
+      "name": "main/Dolphin/DSP/dsp",
+      "target_path": "build/GXSE8P/obj/Dolphin/DSP/dsp.o"
+    },
+    {
+      "name": "main/Dolphin/DSP/dsp_debug",
+      "target_path": "build/GXSE8P/obj/Dolphin/DSP/dsp_debug.o"
+    },
+    {
+      "name": "main/Dolphin/DSP/dsp_task",
+      "target_path": "build/GXSE8P/obj/Dolphin/DSP/dsp_task.o"
+    },
+    {
+      "name": "main/Dolphin/DVD/dvdlow",
+      "target_path": "build/GXSE8P/obj/Dolphin/DVD/dvdlow.o"
+    },
+    {
+      "name": "main/Dolphin/DVD/dvdfs",
+      "target_path": "build/GXSE8P/obj/Dolphin/DVD/dvdfs.o"
+    },
+    {
+      "name": "main/Dolphin/DVD/dvd",
+      "target_path": "build/GXSE8P/obj/Dolphin/DVD/dvd.o"
+    },
+    {
+      "name": "main/Dolphin/DVD/dvdqueue",
+      "target_path": "build/GXSE8P/obj/Dolphin/DVD/dvdqueue.o"
+    },
+    {
+      "name": "main/Dolphin/DVD/dvderror",
+      "target_path": "build/GXSE8P/obj/Dolphin/DVD/dvderror.o"
+    },
+    {
+      "name": "main/Dolphin/DVD/dvdidutils",
+      "target_path": "build/GXSE8P/obj/Dolphin/DVD/dvdidutils.o"
+    },
+    {
+      "name": "main/Dolphin/DVD/dvdFatal",
+      "target_path": "build/GXSE8P/obj/Dolphin/DVD/dvdFatal.o"
+    },
+    {
+      "name": "main/Dolphin/DVD/fstload",
+      "target_path": "build/GXSE8P/obj/Dolphin/DVD/fstload.o"
+    },
+    {
+      "name": "main/Dolphin/EXI/EXIBios",
+      "target_path": "build/GXSE8P/obj/Dolphin/EXI/EXIBios.o"
+    },
+    {
+      "name": "main/Dolphin/EXI/EXIUart",
+      "target_path": "build/GXSE8P/obj/Dolphin/EXI/EXIUart.o"
+    }
+  ]
+}
