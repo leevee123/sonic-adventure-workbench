@@ -45,8 +45,19 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
+          git add --force .
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          manifest=json.loads(pathlib.Path("source-manifest.json").read_text())
+          tracked=set(subprocess.check_output(["git","ls-files","-z"]).decode().split("\0"))
+          expected={"WORKBENCH.md" if row["file"]=="README.md" else row["file"] for row in manifest["files"]}
+          missing=expected-tracked
+          assert not missing, sorted(missing)
+          print(f'Verified {len(expected)} source files are tracked.')
+          PY
           if ! git diff --cached --quiet; then
-            git commit -m "Import complete workbench source and fixed Xbox launcher"
+            git commit -q -m "Import complete workbench source and fixed Xbox launcher"
             git push origin HEAD:main
           fi
+          git tag -f v0.2.1
+          git push origin refs/tags/v0.2.1 --force
