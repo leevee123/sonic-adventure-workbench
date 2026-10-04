@@ -29,6 +29,7 @@
 #include "VideoCommon/VideoConfig.h"
 #include "automation_protocol.hpp"
 #include "dolphin_runtime_internal.hpp"
+#include "sonic_enhancements.hpp"
 #include "moderngekko/cpu_state.h"
 #include "moderngekko/mod_loader.hpp"
 #include "moderngekko/module_loader.hpp"
@@ -520,6 +521,8 @@ struct Runtime::Impl {
   RuntimeAutomationState automation_state;
   Common::EventHook present_hook;
   bool automation_registered = false;
+  Common::EventHook sonic_hook;
+  sonic::Enhancements sonic_state;
   std::jthread automation_thread;
 };
 
@@ -689,6 +692,8 @@ RuntimeCreateResult Runtime::Create(RuntimeConfig config) {
   if (impl->config.graphics.internal_resolution_scale)
     Config::SetBase(Config::GFX_EFB_SCALE,
                     *impl->config.graphics.internal_resolution_scale);
+  Config::SetBase(Config::GFX_ASPECT_RATIO, impl->config.widescreen ? AspectMode::ForceWide : AspectMode::ForceStandard);
+  Config::SetBase(Config::GFX_WIDESCREEN_HACK, impl->config.widescreen);
   Config::SetBase(Config::GFX_SHADER_CACHE, true);
   Config::SetBase(Config::GFX_SHADER_COMPILATION_MODE,
                   ShaderCompilationMode::AsynchronousUberShaders);
@@ -754,6 +759,7 @@ Runtime::~Runtime() {
     }
     m_impl->automation_registered = false;
   }
+  m_impl->sonic_hook = {};
   m_impl->state_hook = {};
   if (m_impl->controllers_initialized)
     UICommon::ShutdownControllers();
@@ -815,6 +821,29 @@ RuntimeRunResult Runtime::Run() {
                          "Dolphin could not boot sys/main.dol"}};
   }
   m_impl->booted = true;
+  const bool supported_sonic = m_impl->metadata.disc_id == "GXSE8P" &&
+      m_impl->metadata.dol_sha256 == "9b3eb6eb5e5529464d15fc51ba72924fef04dc876642224324d8659d9e7c59f2" &&
+      m_impl->metadata.rel_sha256 == "5829b76f4a865a1994cbfc74095d7d1ea194f7cedf5311a44f6f9e6541d35820";
+  if ((m_impl->config.widescreen || m_impl->config.instant_light_dash) && !supported_sonic)
+    std::fprintf(stderr, "[sonic] enhancements disabled: unsupported game build\n");
+  if (supported_sonic && (m_impl->config.widescreen || m_impl->config.instant_light_dash)) {
+    m_impl->sonic_hook = GetVideoEvents().vi_end_field_event.Register([this] {
+      auto& system = Core::System::GetInstance();
+      auto& memory = system.GetMemory();
+      const auto read = [&](u32 address, u8 size) -> u32 {
+        const u8* p = memory.GetPointerForRange(address, size);
+        if (!p) return 0; u32 v = 0;
+        for (u8 i = 0; i < size; ++i) v = (v << 8) | p[i];
+        return v;
+      };
+      const auto write = [&](u32 address, u32 value, u8 size) {
+        u8* p = memory.GetPointerForRange(address, size); if (!p) return;
+        for (u8 i = 0; i < size; ++i) p[i] = value >> (8 * (size - 1 - i));
+      };
+      if (m_impl->config.instant_light_dash && m_impl->sonic_state.LightDash(read, write))
+        std::fprintf(stderr, "[sonic] instant light dash requested\n");
+    });
+  }
   m_impl->present_hook =
       GetVideoEvents().after_present_event.Register([this](const PresentInfo &info) {
         m_impl->automation_state.frame_count.store(info.frame_count,

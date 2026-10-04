@@ -257,6 +257,8 @@ int RunMain(int argc, char **argv) {
     config.graphics.backend = frontend_config.graphics_backend;
   config.fullscreen = frontend_config.fullscreen;
   config.show_fps_in_title = frontend_config.show_fps_in_title;
+  config.widescreen = frontend_config.widescreen;
+  config.instant_light_dash = frontend_config.instant_light_dash;
   if (use_default_mods) {
     config.mod_directories.push_back(executable_directory / "Mods");
     config.mod_directories.push_back(config.user_directory / "Mods");

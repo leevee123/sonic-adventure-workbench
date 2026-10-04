@@ -71,6 +71,8 @@ struct RuntimeConfig
   bool fullscreen = false;
   bool allow_interpreter = false;
   bool show_fps_in_title = true;
+  bool widescreen = false;
+  bool instant_light_dash = false;
   std::optional<std::string> window_title;
   // Boot straight into a savestate instead of from the title screen.
   std::optional<std::filesystem::path> load_state_path;

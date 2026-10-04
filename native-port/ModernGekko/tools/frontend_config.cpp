@@ -140,6 +140,12 @@ ConfigResult LoadConfig(const fs::path &user_directory,
     } else if (key == "fullscreen") {
       if (!ParseBoolean(value, &config.fullscreen))
         return {.error = "fullscreen must be true or false"};
+    } else if (key == "widescreen") {
+      if (!ParseBoolean(value, &config.widescreen))
+        return {.error = "widescreen must be true or false"};
+    } else if (key == "instant_light_dash") {
+      if (!ParseBoolean(value, &config.instant_light_dash))
+        return {.error = "instant_light_dash must be true or false"};
     } else if (key == "nickname")
       config.netplay_nickname = raw_value;
     else if (key == "address")
@@ -257,6 +263,8 @@ bool SaveConfig(const fs::path &user_directory, const ConfigResult &config,
        << "fullscreen=" << (config.fullscreen ? "true" : "false") << '\n'
        << "show_fps_in_title=" << (config.show_fps_in_title ? "true" : "false")
        << '\n'
+       << "widescreen=" << (config.widescreen ? "true" : "false") << '\n'
+       << "[Gameplay]\ninstant_light_dash=" << (config.instant_light_dash ? "true" : "false") << '\n'
        << "[Input]\n";
   for (std::size_t i = 0; i < config.controllers.size() && i < 4; ++i) {
     if (config.controllers[i].find_first_of("\r\n") != std::string::npos) {

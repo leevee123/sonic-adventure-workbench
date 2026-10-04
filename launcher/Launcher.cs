@@ -153,13 +153,13 @@ namespace SonicLauncher
         public readonly string Root;
         readonly string userDirectory,profileDirectory;
         public Game(string root,string userDirectory=null,string profileDirectory=null) { Root=Path.GetFullPath(root);this.userDirectory=userDirectory;this.profileDirectory=profileDirectory; }
-        public string User { get { return userDirectory ?? Path.Combine(Root,"native-port","runtime-user"); } }
+        public string User { get { return userDirectory ?? new Ini(Path.Combine(Root,"installation.ini")).Get("Installation","UserDirectory",Path.Combine(Root,"native-port","runtime-user")); } }
         public string Config { get { return Path.Combine(User,"config.ini"); } }
         public string Runner { get { return Path.Combine(Root,"native-port","bin","moderngekko-run.exe"); } }
         public string Module { get { return Path.Combine(Root,"native-port","bin","gGXSE8P_recomp.dll"); } }
         public string Preferences { get { return Path.Combine(ProfileDirectory,"preferences.ini"); } }
         public string InputConfig { get { return Path.Combine(User,"Config","GCPadNew.ini"); } }
-        public string ProfileDirectory { get { return profileDirectory ?? Path.Combine(Root,"launcher"); } }
+        public string ProfileDirectory { get { return profileDirectory ?? new Ini(Path.Combine(Root,"installation.ini")).Get("Installation","ProfileDirectory",Path.Combine(Root,"launcher")); } }
         public static bool IsRunning(Game game)
         {
             foreach(var process in Process.GetProcessesByName("moderngekko-run"))
@@ -176,8 +176,15 @@ namespace SonicLauncher
         public string Missing()
         {
             foreach(string path in new[]{Runner,Module,Path.Combine(Root,"disc","sys","main.dol"),Path.Combine(Root,"disc","sys","boot.bin")})
-                if(!File.Exists(path)) return "Missing "+Path.GetFileName(path)+". Choose the prepared workbench with Game folder.";
+                if(!File.Exists(path)) return "Missing "+Path.GetFileName(path)+". Run Setup to import your GameCube dump.";
             return null;
+        }
+        public void InitializeData()
+        {
+            if(!File.Exists(Path.Combine(Root,"installation.ini")))return;
+            Directory.CreateDirectory(User);
+            string defaults=Path.Combine(Root,"native-port","runtime-user","config.ini");
+            if(!File.Exists(Config)&&File.Exists(defaults))File.Copy(defaults,Config,false);
         }
         static string Quote(string value) { return "\""+value+"\""; }
         public ProcessStartInfo StartInfo(bool fast, string automation)
@@ -289,26 +296,34 @@ namespace SonicLauncher
     sealed class SettingsForm : DarkForm
     {
         readonly Game game; readonly ActionButton[] quality;
-        readonly ActionButton fullscreen, fps;
-        int selected; bool isFullscreen, showFps;
-        public SettingsForm(Game game,bool preview) : base("Sonic Adventure DX | Settings",430,390,preview)
+        readonly ActionButton fullscreen, fps, wide, dash;
+        int selected; bool isFullscreen, showFps, isWide, instantDash;
+        public SettingsForm(Game game,bool preview) : base("Sonic Adventure DX | Settings",560,447,preview)
         {
             this.game=game; var ini=new Ini(game.Config);
             string resolution=ini.Get("Video","resolution","1920x1080");
             selected=resolution=="640x528"?0:resolution=="1280x720"?1:2;
             isFullscreen=ini.Get("Video","fullscreen","false")=="true";
             showFps=ini.Get("Video","show_fps_in_title","true")=="true";
+            isWide=ini.Get("Video","widescreen","false")=="true";
+            instantDash=ini.Get("Gameplay","instant_light_dash","false")=="true";
             quality=new ActionButton[3];
             string[] names={"1x  Original","2x  Balanced","3x  High"};
-            for(int i=0;i<3;i++) { int index=i; quality[i]=ButtonAt(names[i],24+i*129,112,122,42,delegate{selected=index;RefreshChoices();}); }
-            fullscreen=ButtonAt("",24,205,382,42,delegate{isFullscreen=!isFullscreen;RefreshChoices();});
-            fps=ButtonAt("",24,255,382,42,delegate{showFps=!showFps;RefreshChoices();});
-            ButtonAt("Cancel",24,322,120,43,delegate{DialogResult=DialogResult.Cancel;Close();});
-            var save=ButtonAt("Save settings",154,322,252,43,delegate
+            for(int i=0;i<3;i++) { int index=i; quality[i]=ButtonAt(names[i],24+i*174,112,164,42,delegate{selected=index;RefreshChoices();}); }
+            fullscreen=ButtonAt("",24,205,250,42,delegate{isFullscreen=!isFullscreen;RefreshChoices();});
+            fps=ButtonAt("",286,205,250,42,delegate{showFps=!showFps;RefreshChoices();});
+            wide=ButtonAt("",24,265,250,62,delegate{isWide=!isWide;RefreshChoices();});
+            wide.Subtitle="16:9 field of view";
+            dash=ButtonAt("",286,265,250,62,delegate{instantDash=!instantDash;RefreshChoices();});
+            dash.Subtitle="Y button / keyboard S";
+            ButtonAt("Cancel",24,378,120,43,delegate{DialogResult=DialogResult.Cancel;Close();});
+            var save=ButtonAt("Save settings",154,378,382,43,delegate
             {
                 try { var current=new Ini(game.Config); current.Set("Video","resolution",new[]{"640x528","1280x720","1920x1080"}[selected]);
                     current.Set("Video","fullscreen",isFullscreen?"true":"false");
-                    current.Set("Video","show_fps_in_title",showFps?"true":"false"); current.Save(game.Config);
+                    current.Set("Video","show_fps_in_title",showFps?"true":"false");
+                    current.Set("Video","widescreen",isWide?"true":"false");
+                    current.Set("Gameplay","instant_light_dash",instantDash?"true":"false");current.Save(game.Config);
                     DialogResult=DialogResult.OK;Close(); }
                 catch(Exception ex) { MessageBox.Show(this,ex.Message,"Couldn't save settings",MessageBoxButtons.OK,MessageBoxIcon.Error); }
             }); save.Primary=true; AcceptButton=save;
@@ -317,15 +332,18 @@ namespace SonicLauncher
         void RefreshChoices()
         {
             for(int i=0;i<quality.Length;i++){quality[i].Selected=i==selected;quality[i].Invalidate();}
-            fullscreen.Text="Fullscreen                         "+(isFullscreen?"ON":"OFF"); fullscreen.Selected=isFullscreen; fullscreen.Invalidate();
-            fps.Text="Show frame rate                   "+(showFps?"ON":"OFF"); fps.Selected=showFps; fps.Invalidate();
+            fullscreen.Text="Fullscreen  "+(isFullscreen?"ON":"OFF"); fullscreen.Selected=isFullscreen; fullscreen.Invalidate();
+            fps.Text="Frame rate  "+(showFps?"ON":"OFF"); fps.Selected=showFps; fps.Invalidate();
+            wide.Text="Widescreen  "+(isWide?"ON":"OFF");wide.Selected=isWide;wide.Invalidate();
+            dash.Text="Instant Light Dash  "+(instantDash?"ON":"OFF");dash.Selected=instantDash;dash.Invalidate();
         }
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e); var g=e.Graphics; g.ScaleTransform(S,S);
             Theme.Text(g,"MAKE IT YOURS",23,Theme.Ink,new RectangleF(24,22,382,38),FontStyle.Bold);
             Theme.Text(g,"IMAGE QUALITY",10,Theme.Muted,new RectangleF(24,80,382,20),FontStyle.Bold);
-            Theme.Text(g,"Higher quality uses more graphics power.",11,Theme.Muted,new RectangleF(24,163,382,22));
+            Theme.Text(g,"Higher quality uses more graphics power.",11,Theme.Muted,new RectangleF(24,163,512,22));
+            Theme.Text(g,"Dash follows nearby rings using the original game action.",11,Theme.Muted,new RectangleF(24,339,512,24));
         }
         protected override void OnKeyDown(KeyEventArgs e) { base.OnKeyDown(e); if(e.KeyCode==Keys.Escape) Close(); }
     }
@@ -333,49 +351,28 @@ namespace SonicLauncher
     sealed class LauncherForm : DarkForm
     {
         public const string WindowTitle="Sonic Adventure DX | Launcher";
-        Game game; readonly ActionButton fast,native,play,settings,input;
+        readonly Game game; readonly ActionButton fast,native,play,settings,input;
         readonly System.Windows.Forms.Timer timer;
         bool fastMode=true, hiddenUntilExit;
         Process running; StreamWriter log; string logPath;
         readonly object logLock=new object();
         string status="Ready for adventure";
-        public LauncherForm(Game selectedGame,bool preview) : base(WindowTitle,840,535,preview)
+        public LauncherForm(Game game,bool preview) : base(WindowTitle,840,535,preview)
         {
-            this.game=selectedGame; fastMode=new Ini(game.Preferences).Get("Launcher","mode","fast")!="native";
+            this.game=game;if(!preview)game.InitializeData();fastMode=new Ini(game.Preferences).Get("Launcher","mode","fast")!="native";
             var min=ButtonAt("\u2013",752,9,30,30,delegate{WindowState=FormWindowState.Minimized;});min.Quiet=true;min.TabStop=false;min.AccessibleName="Minimize";
             var close=ButtonAt("\u00d7",788,9,30,30,delegate{Close();});close.Quiet=true;close.CloseButton=true;close.AccessibleName="Close";
             fast=ButtonAt("Fast",24,297,390,64,delegate{SetMode(true);});fast.Subtitle="Smooth gameplay  \u00b7  Recommended";
-            native=ButtonAt("Native",426,297,390,64,delegate{SetMode(false);});native.Subtitle="Play the recompilation build";
+            native=ButtonAt("Native",426,297,390,64,delegate{SetMode(false);});native.Subtitle="Native DOL + module fallback";
             play=ButtonAt("PLAY  \u2192",24,378,590,66,delegate{Launch();});play.Primary=true;
             settings=ButtonAt("Settings",626,378,190,66,delegate{using(var dialog=new SettingsForm(game,false)) dialog.ShowDialog(this);});
             input=ButtonAt("Controls",24,459,183,32,delegate{using(var dialog=new InputForm(game,false)) dialog.ShowDialog(this);});input.Quiet=true;
             ButtonAt("Saves folder",221,459,137,32,delegate{OpenFolder(Path.Combine(game.User,"GC"));}).Quiet=true;
             ButtonAt("Game logs",372,459,124,32,delegate{OpenFolder(Path.Combine(game.User,"Logs"));}).Quiet=true;
-            ButtonAt("Game folder",626,459,190,32,delegate{LocateGame();}).Quiet=true;
             AcceptButton=play; UpdateMode();
             string missing=game.Missing(); if(missing!=null) {status=missing; play.Enabled=false;}
             timer=new System.Windows.Forms.Timer(); timer.Interval=250;timer.Tick+=delegate{CheckGame();};timer.Start();
             Shown+=delegate{play.Focus();};
-        }
-        void LocateGame()
-        {
-            if(running!=null)return;
-            using(var dialog=new FolderBrowserDialog())
-            {
-                dialog.Description="Choose your Sonic Adventure workbench folder (contains disc and native-port).";
-                dialog.SelectedPath=game.Root;dialog.ShowNewFolderButton=false;
-                if(dialog.ShowDialog(this)!=DialogResult.OK)return;
-                var selected=new Game(dialog.SelectedPath);string missing=selected.Missing();
-                if(missing!=null){MessageBox.Show(this,missing,"Choose the prepared game workbench",MessageBoxButtons.OK,MessageBoxIcon.Information);return;}
-                game=selected;fastMode=new Ini(game.Preferences).Get("Launcher","mode","fast")!="native";
-                status="Ready for adventure";play.Enabled=true;UpdateMode();
-                try
-                {
-                    string file=Path.Combine(Path.GetDirectoryName(Application.ExecutablePath),"launcher","game-location.ini");
-                    var location=new Ini(file);location.Set("Game","root",game.Root);location.Save(file);
-                }
-                catch(Exception ex){status="Game selected. Couldn't save its location: "+ex.Message;Invalidate();}
-            }
         }
         void UpdateMode() { fast.Selected=fastMode;native.Selected=!fastMode;fast.Invalidate();native.Invalidate();Invalidate(); }
         void SetMode(bool value)
@@ -484,20 +481,10 @@ namespace SonicLauncher
         [STAThread] static int Main(string[] args)
         {
             Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
-            string executableFolder=Path.GetDirectoryName(Application.ExecutablePath);
-            string root=ResolveRoot(executableFolder);
+            string root=Path.GetDirectoryName(Application.ExecutablePath);
             // Build/test commands may run from a temporary directory.
             if(args.Length>=2 && args[0]=="--root"){root=args[1];args=args.Skip(2).ToArray();}
             var game=new Game(root);
-            if(args.Length==0)
-            {
-                try{ImportUpdateSelection(game,executableFolder);}
-                catch(Exception ex){MessageBox.Show("Could not carry over the update controls: "+ex.Message+"\nChoose your controller in Controls.","Sonic Adventure DX",MessageBoxButtons.OK,MessageBoxIcon.Warning);}
-            }
-            if(args.Length==2 && args[0]=="--resolve-root")
-            {
-                File.WriteAllText(args[1],"root="+game.Root+"\nplay_enabled="+(game.Missing()==null?"true":"false")+"\n");return game.Missing()==null?0:1;
-            }
             if(args.Length==2 && args[0]=="--write-icon")
             {using(var icon=Theme.MakeIcon())using(var file=File.Create(args[1]))icon.Save(file);return 0;}
             if(args.Length==2 && args[0]=="--preview")
@@ -522,57 +509,17 @@ namespace SonicLauncher
             }
             return 0;
         }
-        static string ResolveRoot(string folder)
-        {
-            folder=Path.GetFullPath(folder);
-            if(new Game(folder).Missing()==null)return folder;
-            string parent=Path.GetDirectoryName(folder);
-            foreach(string candidate in new[]{folder,parent})
-            {
-                if(string.IsNullOrEmpty(candidate))continue;
-                string location=Path.Combine(candidate,"launcher","game-location.ini");
-                string configured=new Ini(location).Get("Game","root","");
-                if(configured.Length==0)continue;
-                try
-                {
-                    string resolved=Path.GetFullPath(configured);
-                    if(new Game(resolved).Missing()==null)return resolved;
-                }
-                catch(ArgumentException) { }
-                catch(NotSupportedException) { }
-            }
-            return folder;
-        }
-        static void ImportUpdateSelection(Game game,string executableFolder)
-        {
-            // The update can also be opened directly before it is copied into the game folder.
-            // Carry across the choices already saved in that update copy, once.
-            if(string.Equals(game.Root,executableFolder,StringComparison.OrdinalIgnoreCase) ||
-                new Ini(game.Preferences).Get("Input","mode","").Length>0 || Game.IsRunning(game))return;
-            foreach(string candidate in new[]{executableFolder,Path.GetDirectoryName(executableFolder)})
-            {
-                if(string.IsNullOrEmpty(candidate))continue;
-                var staged=new Game(candidate);
-                var preferences=new Ini(staged.Preferences);
-                if(preferences.Get("Input","mode","").Length==0)continue;
-                InputProfiles.Apply(game,InputOptions.Load(staged));
-                var current=new Ini(game.Preferences);
-                string mode=preferences.Get("Launcher","mode","");
-                if(mode=="fast" || mode=="native"){current.Set("Launcher","mode",mode);current.Save(game.Preferences);}
-                return;
-            }
-        }
         static int SelfTest(Game game,string output)
         {
             Directory.CreateDirectory(output);string file=Path.Combine(output,"fixture.ini");
             File.WriteAllText(file,"# keep comment\n[Video]\nresolution=1920x1080\nfullscreen=false\n[Input]\ncontroller=keyboard\n[Netplay]\nnickname=Player\n");
-            var ini=new Ini(file);ini.Set("Video","resolution","1280x720");ini.Set("Video","fullscreen","true");ini.Set("Video","show_fps_in_title","false");ini.Save(file);
+            var ini=new Ini(file);ini.Set("Video","resolution","1280x720");ini.Set("Video","fullscreen","true");ini.Set("Video","show_fps_in_title","false");ini.Set("Video","widescreen","true");ini.Set("Gameplay","instant_light_dash","true");ini.Save(file);
             var read=new Ini(file);var fast=game.StartInfo(true,null);var native=game.StartInfo(false,null);
-            bool ok=read.Get("Video","resolution","")=="1280x720" && read.Get("Video","fullscreen","")=="true" &&
+            bool ok=read.Get("Video","widescreen","")=="true" && read.Get("Gameplay","instant_light_dash","")=="true" && read.Get("Video","resolution","")=="1280x720" && read.Get("Video","fullscreen","")=="true" &&
                 read.Get("Input","controller","")=="keyboard" && read.Get("Netplay","nickname","")=="Player" &&
                 File.ReadAllText(file).Contains("# keep comment") && fast.EnvironmentVariables["MODERNGEKKO_STATICRECOMP"]=="0" &&
                 native.EnvironmentVariables["MODERNGEKKO_STATICRECOMP"]=="1" && fast.Arguments.Contains("--user-dir") && game.Missing()==null;
-            File.WriteAllText(Path.Combine(output,"self-test.json"),"{\"passed\":"+(ok?"true":"false")+",\"checks\":8}\n");return ok?0:1;
+            File.WriteAllText(Path.Combine(output,"self-test.json"),"{\"passed\":"+(ok?"true":"false")+",\"checks\":10}\n");return ok?0:1;
         }
         static int ControllerSmokeTest(Game game,string output)
         {

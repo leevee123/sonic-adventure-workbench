@@ -26,6 +26,8 @@ struct ConfigResult {
   std::vector<std::string> controllers;
   bool show_fps_in_title = true;
   bool fullscreen = false;
+  bool widescreen = false;
+  bool instant_light_dash = false;
   std::string netplay_nickname = "Player";
   std::string netplay_address = "127.0.0.1";
   std::uint16_t netplay_port = 2626;
