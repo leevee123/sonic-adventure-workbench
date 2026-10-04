@@ -8,9 +8,10 @@ No game files or save states are copied into the test report.
 import argparse,json,os,pathlib,struct,subprocess,time
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('root',type=pathlib.Path);parser.add_argument('output',type=pathlib.Path);parser.add_argument('level',type=pathlib.Path);parser.add_argument('--native',action='store_true')
+parser.add_argument('--runner',type=pathlib.Path,help='Optional development runner with the existing local game import')
 args=parser.parse_args();root=args.root.resolve();out=args.output.resolve();out.mkdir();(out/'commands').mkdir()
 env={k.upper():v for k,v in os.environ.items()};env['MODERNGEKKO_STATICRECOMP']='1' if args.native else '0';env['PATH']=env.get('SYSTEMROOT','C:/Windows')+'/System32;'+env.get('SYSTEMROOT','C:/Windows')
-seq=0;checks={};runner=root/'native-port/bin/moderngekko-run.exe'
+seq=0;checks={};runner=args.runner.resolve() if args.runner else root/'native-port/bin/moderngekko-run.exe'
 with (out/'runtime.log').open('w') as log:
  p=subprocess.Popen([str(runner),'--game',str(root/'disc'),'--module',str(root/'native-port/bin/gGXSE8P_recomp.dll'),'--user-dir',str(out/'user'),'--headless','--audio','Null','--graphics','Vulkan','--automation-dir',str(out),'--custom-level',str(args.level.resolve())],cwd=runner.parent,env=env,stdout=log,stderr=subprocess.STDOUT)
  def wait(pred,seconds=60):

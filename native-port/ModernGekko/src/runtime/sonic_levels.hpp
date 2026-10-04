@@ -80,11 +80,27 @@ struct Level {
 };
 struct LevelSession {
   Level level;
-  bool started=false,injected=false,spawned=false,previous_reset=false,cleared=false;
+  bool started=false,injected=false,spawned=false,previous_reset=false,partner_reset=false,cleared=false;
   unsigned ready_frames=0,finish_frames=0,startup_frames=0;std::uint32_t base=0,player=0;
   float floor=-10000;
   float camera_yaw=3.14159265f,camera_pitch=.48f;
   explicit LevelSession(Level l):level(std::move(l)){floor=level.pieces.front().position.y;for(auto& p:level.pieces)floor=std::min(floor,p.position.y);floor+=Level::Anchor-120;}
+  template<class Read,class Write> void TickPartner(Read read,Write write) {
+    if(!injected||!spawned)return;
+    const auto p=read(0x807a8284,4),pw=read(0x807a8244,4);
+    if(p<0x80004000||p>=0x817fff00||(p&3)||pw<0x80004000||pw>=0x817ffe00||(pw&3)||read(p,1)==0)return;
+    const auto number=[&](unsigned o){auto v=read(p+o,4);float f;std::memcpy(&f,&v,4);return f;};
+    const auto put=[&](unsigned o,float f){std::uint32_t v;std::memcpy(&v,&f,4);write(p+o,v,4);};
+    const bool reset=(read(0x8074c8ec,2)&0x10)!=0;
+    if(!std::isfinite(number(36))||number(36)<floor||(reset&&!partner_reset)){
+      put(32,level.spawn.x+12);put(36,level.spawn.y+Level::Anchor);put(40,level.spawn.z);
+      write(p,1,1);write(p+4,0,2);for(unsigned o=16;o<=28;o+=4)write(p+o,0,4);
+      for(unsigned o=0x38;o<=0x40;o+=4)write(pw+o,0,4);
+    }
+    partner_reset=reset;
+    const float dx=number(32)-level.goal.x,dy=number(36)-Level::Anchor-level.goal.y,dz=number(40)-level.goal.z;
+    if(std::abs(dx)<7&&dy>=-2&&dy<20&&std::abs(dz)<7)cleared=true;
+  }
   template<class Read,class Write,class Copy> bool Tick(Read read,Write write,Copy copy) {
     if(!injected && ++startup_frames>7200)throw std::runtime_error("Custom level startup timed out. Check the runtime log.");
     // Main REL uses a fixed retail allocation. Wait until its init has reached

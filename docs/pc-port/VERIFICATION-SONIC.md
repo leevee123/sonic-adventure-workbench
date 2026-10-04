@@ -1,3 +1,18 @@
+# Verification: Sonic Adventure DX workbench 0.6.0
+
+Tested on Windows x64 on 2026-10-03. These are focused automated checks and visual inspections, not a complete playthrough.
+
+- Runtime and launcher builds passed. Multiplayer launcher checks passed for persisted pad selection, independent profiles, disconnected-slot fallback, two distinct controllers, exact restoration, preserved unrelated settings, opt-in runtime flag and interrupted-session recovery (13 checks). Menu previews were inspected; two physical XInput pads were detected, but physical gameplay was not tested.
+- Shared-world tests allocated two distinct original Sonic tasks. Pad two moved/jumped without moving pad one; pad one jumped independently. Both camera views were inspected in Emerald Coast and Windy Valley. Transparent draw queues flush separately per view; the second-view washout artifact was fixed.
+- Emerald Coast to Windy Valley unload/reload created a fresh second task and accepted pad-two jump input after the stage change. Player-one Start paused both players; releasing and pressing Start again restored player-two movement before changing stages. Companion cleanup waits count task simulation steps so video refreshes during loading cannot produce a false timeout. The original pad-enable gate is mirrored from player one, rather than forcing input through pause/event locks.
+- Authored Skyline Sprint checks passed for camera-relative pad-two movement, pad-two fall recovery, RB reset and landing, independent jumps, and pad-two finishing while pad one remained away from the goal. A requested Native split-screen session correctly selected Fast/JIT. Shutdown had exit code zero and no invalid guest reads/writes or multiplayer failures.
+- Multiplayer C++ lifecycle checks passed for initialization delay, distinct spawn, duplicate suppression, stage lifetime, AI companion teardown before registration, waiting through loading without simulation, preserving hubs/bosses, other-character guards, refusing unsupported companions and missing physics. Companion handling was tested with a memory fixture, not an entire retail story route.
+- Existing single-player Native custom-level regression passed: movement, jump/landing, reset, ramp collision, camera orbit, fall recovery and finish.
+
+Remaining co-op limits include full campaign coverage, cutscene/gimmick behavior, physical two-controller gameplay, camera obstruction, far-apart object behavior, independent HUDs and second-view shadows. Hubs, bosses and other campaigns deliberately remain single player. Emerald Coast refraction is omitted in split screen. The project is not 100% decompiled; Native REL integration and source recovery remain unfinished.
+
+Earlier verification records follow for historical context.
+
 # Verification: Sonic Adventure DX workbench 0.5.0
 
 

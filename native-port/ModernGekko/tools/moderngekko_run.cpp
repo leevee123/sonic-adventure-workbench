@@ -47,6 +47,7 @@ void Usage() {
                " [--game <extracted-root>] [--module <path>]\n"
                "       [--user-dir <path>] [--title <text>] [--load-state <path>]\n"
                "       [--custom-level <SALEVEL1 file>] (GXSE8P revision 0 only)\n"
+               "       [--split-screen] (two local pads, Sonic stages and custom levels)\n"
                "       [--graphics <backend>] [--audio <backend>]\n"
                "       [--mods <directory>] [--no-mods]\n"
                "       [--wayland] [-X11] [--headless] [--allow-interpreter]\n"
@@ -182,6 +183,8 @@ int RunMain(int argc, char **argv) {
     }
     else if (arg == "--custom-level")
       config.custom_level_path = StringToPath(value("--custom-level"));
+    else if (arg == "--split-screen")
+      config.split_screen = true;
     else if (arg == "--graphics")
       config.graphics.backend = value("--graphics");
     else if (arg == "--audio")
@@ -239,8 +242,8 @@ int RunMain(int argc, char **argv) {
       return 2;
     }
   }
-  if (config.custom_level_path && (config.load_state_path || netplay_role)) {
-    std::cerr << "Custom levels require a fresh local session; save states and netplay are unsupported.\n";
+  if ((config.custom_level_path||config.split_screen) && (config.load_state_path || netplay_role)) {
+    std::cerr << "Custom levels and split screen require a fresh local session; save states and netplay are unsupported.\n";
     return 2;
   }
   if (config.game_root.empty())

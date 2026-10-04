@@ -60,6 +60,9 @@ void Clear();
 void Reload(Core::System& system);
 
 void Patch(Core::System& system, u32 pc, std::string_view func_name);
+// Runtime-owned hooks use the same CPU-thread and JIT invalidation path as
+// fixed SDK hooks. They are cleared with the emulation session.
+void PatchHostFunction(Core::System& system, u32 pc, HookFunction function, HookType type);
 u32 UnPatch(Core::System& system, std::string_view patch_name);
 u32 UnpatchRange(Core::System& system, u32 start_addr, u32 end_addr);
 void Execute(const Core::CPUThreadGuard& guard, u32 current_pc, u32 hook_index);

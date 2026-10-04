@@ -13,7 +13,7 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 namespace SonicLauncher {
 static class Installation {
-    public const string Version="0.5.0";
+    public const string Version="0.6.0";
     public const string Product="SonicAdventureDX.GXSE8P.Workbench";
     public const string Repository="https://github.com/leevee123/sonic-adventure-workbench";
     public static string Canonical(string path) { return Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar); }

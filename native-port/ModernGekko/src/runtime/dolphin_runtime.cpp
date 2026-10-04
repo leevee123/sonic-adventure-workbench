@@ -13,6 +13,7 @@
 #include "Core/HW/GBACore.h"
 #include "Core/HW/GCPad.h"
 #include "Core/HW/Memmap.h"
+#include "Core/HW/SI/SI_Device.h"
 #include "Core/Host.h"
 #include "Core/NetPlay/NetPlayClient.h"
 #include "Core/PowerPC/JitInterface.h"
@@ -31,6 +32,8 @@
 #include "dolphin_runtime_internal.hpp"
 #include "sonic_enhancements.hpp"
 #include "sonic_levels.hpp"
+#include "sonic_multiplayer.hpp"
+#include "sonic_split_renderer.hpp"
 #include "DiscIO/DirectoryBlob.h"
 #include "VideoCommon/OnScreenDisplay.h"
 #include "moderngekko/cpu_state.h"
@@ -101,12 +104,12 @@ std::string FormatWindowTitle(const std::string &title, double fps) {
                      s_net_wait_ms_per_second, telemetry.buffer_size);
 }
 
-PowerPC::CPUCore SelectCPUCore() {
+PowerPC::CPUCore SelectCPUCore(bool force_fallback=false) {
   static const bool static_recomp = [] {
     const char *v = std::getenv("MODERNGEKKO_STATICRECOMP");
     return !v || !*v || *v != '0';
   }();
-  if (static_recomp)
+  if (static_recomp&&!force_fallback)
     return PowerPC::CPUCore::StaticRecomp;
 #ifdef _M_ARM_64
   return PowerPC::CPUCore::JITARM64;
@@ -297,6 +300,8 @@ std::optional<RuntimeError> ApplyAutomationCommand(Runtime& runtime,
                                                    std::stop_token stop_token)
 {
   auto& system = Core::System::GetInstance();
+  if(runtime.GetConfig().split_screen && (command.type==automation::CommandType::SaveState||command.type==automation::CommandType::LoadState))
+    return RuntimeError{RuntimeErrorCode::InvalidState,"Save states are unavailable in split-screen sessions."};
   switch (command.type)
   {
   case automation::CommandType::Pad:
@@ -527,6 +532,9 @@ struct Runtime::Impl {
   Common::EventHook sonic_hook;
   sonic::Enhancements sonic_state;
   std::unique_ptr<sonic::LevelSession> custom_level;
+  sonic::MultiplayerSession multiplayer;
+  std::unique_ptr<sonic::SplitRenderer> split_renderer;
+  std::string session_failure;
   std::jthread automation_thread;
 };
 
@@ -572,6 +580,8 @@ RuntimeCreateResult Runtime::Create(RuntimeConfig config) {
   GameInspectResult inspected = InspectGame(config.game_root, false);
   if (!inspected)
     return {{}, RuntimeError{RuntimeErrorCode::InvalidGame, inspected.error}};
+  if(config.split_screen && (config.load_state_path || inspected.metadata->disc_id!="GXSE8P" || inspected.metadata->dol_sha256!="9b3eb6eb5e5529464d15fc51ba72924fef04dc876642224324d8659d9e7c59f2" || inspected.metadata->rel_sha256!="5829b76f4a865a1994cbfc74095d7d1ea194f7cedf5311a44f6f9e6541d35820"))
+    return {{},RuntimeError{RuntimeErrorCode::InvalidGame,"Split screen requires a fresh GXSE8P revision 0 session."}};
 
   const ModernGekkoModuleRequirements requirements = {
       MODERNGEKKO_CPU_ABI_VERSION, static_cast<std::uint32_t>(sizeof(CPUState)),
@@ -635,6 +645,7 @@ RuntimeCreateResult Runtime::Create(RuntimeConfig config) {
     impl->ui_initialized = true;
   }
   Config::SetBase(Config::MAIN_FULLSCREEN, impl->config.fullscreen);
+  if(impl->config.split_screen)Config::SetBase(Config::GetInfoForSIDevice(1),SerialInterface::SIDEVICE_GC_CONTROLLER);
   if (impl->config.headless) {
     Common::RegisterMsgAlertHandler([](const char* caption, const char* text,
                                       bool, Common::MsgType) {
@@ -694,7 +705,8 @@ RuntimeCreateResult Runtime::Create(RuntimeConfig config) {
   }
   impl->platform->SetTitle(impl->title);
 
-  Config::SetBase(Config::MAIN_CPU_CORE, SelectCPUCore());
+  Config::SetBase(Config::MAIN_CPU_CORE, SelectCPUCore(impl->config.split_screen));
+  if(impl->config.split_screen)std::fprintf(stderr,"[multiplayer] Fast/JIT mode selected for render hooks\n");
   if (!impl->config.graphics.backend.empty())
     Config::SetBase(Config::MAIN_GFX_BACKEND, impl->config.graphics.backend);
   else if (impl->config.headless)
@@ -851,11 +863,21 @@ RuntimeRunResult Runtime::Run() {
       m_impl->metadata.rel_sha256 == "5829b76f4a865a1994cbfc74095d7d1ea194f7cedf5311a44f6f9e6541d35820";
   if ((m_impl->config.widescreen || m_impl->config.instant_light_dash) && !supported_sonic)
     std::fprintf(stderr, "[sonic] enhancements disabled: unsupported game build\n");
-  if (supported_sonic && (m_impl->config.widescreen || m_impl->config.instant_light_dash || m_impl->custom_level)) {
+  if(supported_sonic && m_impl->config.split_screen) {
+    m_impl->split_renderer=std::make_unique<sonic::SplitRenderer>(Core::System::GetInstance(),m_impl->multiplayer);
+    m_impl->split_renderer->failure=[this](const char* message){if(m_impl->session_failure.empty()){m_impl->session_failure=message;std::fprintf(stderr,"[multiplayer] failed: %s\n",message);}RequestStop();};
+  }
+  if (supported_sonic && (m_impl->config.widescreen || m_impl->config.instant_light_dash || m_impl->custom_level || m_impl->config.split_screen)) {
     m_impl->sonic_hook = GetVideoEvents().vi_end_field_event.Register([this] {
       auto& system = Core::System::GetInstance();
       auto& memory = system.GetMemory();
       const auto read = [&](u32 address, u8 size) -> u32 {
+        if(m_impl->config.split_screen && address==0x80845480) {
+          const u8* ready=memory.GetPointerForRange(sonic::MultiplayerSession::PlayerPhysics,4);
+          if(!ready || ready[0]!=0x80)return 0;
+          address=sonic::MultiplayerSession::PlayerWorks;
+        }
+        if(m_impl->config.split_screen && address==0x80845484)address=sonic::MultiplayerSession::PlayerPhysics;
         const u8* p = memory.GetPointerForRange(address, size);
         if (!p) return 0; u32 v = 0;
         for (u8 i = 0; i < size; ++i) v = (v << 8) | p[i];
@@ -867,14 +889,24 @@ RuntimeRunResult Runtime::Run() {
       };
       if (m_impl->config.instant_light_dash && m_impl->sonic_state.LightDash(read, write))
         std::fprintf(stderr, "[sonic] instant light dash requested\n");
+      if(m_impl->config.split_screen) {
+        const auto call=[&](u32 address,std::array<u32,3> arguments)->u32 {
+          return sonic::GuestCall(system,address,arguments);
+        };
+        const bool was_spawned=m_impl->multiplayer.spawned;
+        try {m_impl->multiplayer.Tick(read,write,call,!m_impl->custom_level || m_impl->custom_level->spawned);}
+        catch(const std::exception& e){m_impl->split_renderer->Fail(e.what());}
+        if(!was_spawned&&m_impl->multiplayer.spawned)std::fprintf(stderr,"[multiplayer] second Sonic task=%08x work=%08x\n",m_impl->multiplayer.other_task,m_impl->multiplayer.other_work);
+      }
       if (m_impl->custom_level) {
         auto& session=*m_impl->custom_level;const bool was_injected=session.injected,was_cleared=session.cleared;
         const auto copy=[&](u32 address,const std::vector<unsigned char>& data){auto* p=memory.GetPointerForRange(address,data.size());if(!p)throw std::runtime_error("Custom terrain range is not mapped.");std::memcpy(p,data.data(),data.size());};
-        try { if(session.Tick(read,write,copy))RequestStop(); }
+        try {if(m_impl->config.split_screen)session.TickPartner(read,write);if(session.Tick(read,write,copy))RequestStop(); }
         catch(const std::exception& e){std::fprintf(stderr,"[levels] failed: %s\n",e.what());RequestStop();}
         if(!was_injected && session.injected){std::fprintf(stderr,"[levels] terrain ready: REL=%08x pieces=%zu\n",session.base,session.level.pieces.size());OSD::AddMessage("Custom level | Z / Xbox RB: restart",8000);}
         if(!was_cleared && session.cleared){std::fprintf(stderr,"[levels] level cleared\n");OSD::AddMessage("Level clear! Returning to the launcher...",5000,OSD::Color::GREEN);}
       }
+      if(m_impl->split_renderer)try{m_impl->split_renderer->Tick();}catch(const std::exception& e){m_impl->split_renderer->Fail(e.what());}
     });
   }
   m_impl->present_hook =
@@ -910,6 +942,9 @@ RuntimeRunResult Runtime::Run() {
   Core::Shutdown(Core::System::GetInstance());
   m_impl->booted = false;
   m_impl->running = false;
+  m_impl->split_renderer.reset();
+  m_impl->sonic_hook={};
+  if(!m_impl->session_failure.empty())return {RuntimeExitReason::Stopped,RuntimeError{RuntimeErrorCode::InvalidState,m_impl->session_failure}};
   return {};
 }
 

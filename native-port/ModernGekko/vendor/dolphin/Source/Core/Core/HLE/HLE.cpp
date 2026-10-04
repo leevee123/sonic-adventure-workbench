@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <array>
 #include <map>
+#include <vector>
+#include <cstdio>
 
 #include "Common/CommonTypes.h"
 
@@ -27,7 +29,7 @@ namespace HLE
 static std::map<u32, u32> s_hooked_addresses;
 
 // clang-format off
-constexpr std::array<Hook, 23> os_patches{{
+static std::vector<Hook> os_patches{{
     // Placeholder, os_patches[0] is the "non-existent function" index
     {"FAKE_TO_SKIP_0",               HLE_Misc::UnimplementedFunction,       HookType::Replace, HookFlag::Generic},
 
@@ -78,6 +80,28 @@ void Patch(Core::System& system, u32 addr, std::string_view func_name)
       return;
     }
   }
+}
+
+void PatchHostFunction(Core::System& system, u32 addr, HookFunction function, HookType type)
+{
+  if (!function || (addr & 3) || (type != HookType::Start && type != HookType::Replace))
+    return;
+  Hook hook{};
+  std::snprintf(hook.name, sizeof(hook.name), "ModernGekkoHost_%08x", addr);
+  hook.function = function;
+  hook.type = type;
+  hook.flags = HookFlag::Fixed;
+  const auto existing = s_hooked_addresses.find(addr);
+  if (existing != s_hooked_addresses.end() && existing->second >= 23)
+    os_patches[existing->second] = hook;
+  else
+  {
+    const u32 index = static_cast<u32>(os_patches.size());
+    os_patches.push_back(hook);
+    s_hooked_addresses[addr] = index;
+  }
+  system.GetPPCState().iCache.Invalidate(system.GetMemory(), system.GetJitInterface(), addr);
+  Host_JitCacheInvalidation();
 }
 
 void PatchFixedFunctions(Core::System& system)
@@ -152,6 +176,7 @@ void PatchFunctions(Core::System& system)
 void Clear()
 {
   s_hooked_addresses.clear();
+  os_patches.resize(23);
 }
 
 void Reload(Core::System& system)

@@ -86,6 +86,7 @@ namespace SonicLauncher
 
     static class InputProfiles
     {
+        public static IEnumerable<string> ControllerLines(InputOptions options){return Controller(options);}
         static List<string> Keyboard()
         {
             return new List<string>{

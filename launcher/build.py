@@ -19,7 +19,7 @@ common = [str(csc), "/nologo", "/target:winexe", "/optimize+", "/platform:x64",
           "/win32manifest:" + win(HERE / "app.manifest"),
           "/win32icon:" + win(HERE / "ring.ico")]
 launcher = args.output / "Sonic Launcher.exe"
-sources=[win(HERE/name) for name in ("Launcher.cs","Controller.cs","Installation.cs","Levels.cs","LevelEditor.cs")]
+sources=[win(HERE/name) for name in ("Launcher.cs","Controller.cs","Installation.cs","Levels.cs","LevelEditor.cs","Multiplayer.cs")]
 subprocess.run(common + ["/main:SonicLauncher.Program", "/out:" + win(launcher)] + sources, check=True)
 print(launcher)
 uninstall=args.output/"Uninstall Sonic Adventure DX.exe"
@@ -32,5 +32,5 @@ if args.payload:
     subprocess.run(common + ["/main:SonicLauncher.SetupProgram",
         "/r:System.IO.Compression.dll", "/r:System.IO.Compression.FileSystem.dll",
         "/resource:" + win(args.payload) + ",RuntimePayload", "/out:" + win(setup)] +
-        [win(HERE / name) for name in ("Launcher.cs", "Controller.cs", "Installation.cs", "Levels.cs", "LevelEditor.cs", "Importer.cs", "Setup.cs")], check=True)
+        [win(HERE / name) for name in ("Launcher.cs", "Controller.cs", "Installation.cs", "Levels.cs", "LevelEditor.cs", "Multiplayer.cs", "Importer.cs", "Setup.cs")], check=True)
     print(setup)

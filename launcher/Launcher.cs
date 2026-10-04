@@ -187,7 +187,7 @@ namespace SonicLauncher
             if(!File.Exists(Config)&&File.Exists(defaults))File.Copy(defaults,Config,false);
         }
         static string Quote(string value) { return "\""+value+"\""; }
-        public ProcessStartInfo StartInfo(bool fast, string automation, string customLevel=null)
+        public ProcessStartInfo StartInfo(bool fast, string automation, string customLevel=null,bool splitScreen=false)
         {
             var info=new ProcessStartInfo(Runner);
             info.WorkingDirectory=Path.GetDirectoryName(Runner);
@@ -197,6 +197,7 @@ namespace SonicLauncher
                 " --user-dir "+Quote(User)+" --title \"Sonic Adventure DX\" --graphics Vulkan";
             if(automation!=null) info.Arguments+=" --headless --audio Null --automation-dir "+Quote(automation);
             if(customLevel!=null)info.Arguments+=" --custom-level "+Quote(customLevel);
+            if(splitScreen)info.Arguments+=" --split-screen";
             info.EnvironmentVariables["MODERNGEKKO_STATICRECOMP"]=fast?"0":"1";
             // Diagnostics are opt-in for research, not extra work on every Play click.
             foreach(string key in new[]{"STATICRECOMP_TRACE_FILE","STATICRECOMP_DISPATCH_SAMPLES","SONIC_PAD_DIAGNOSTICS"})
@@ -289,7 +290,8 @@ namespace SonicLauncher
                 using(var g=Graphics.FromImage(bitmap))foreach(Control c in Controls)
                 using(var child=new Bitmap(c.Width,c.Height))
                 {c.DrawToBitmap(child,new Rectangle(Point.Empty,c.Size));g.DrawImageUnscaled(child,c.Location);
-                 var number=c as NumericUpDown;if(number!=null){using(var b=new SolidBrush(number.BackColor))g.FillRectangle(b,c.Left+3,c.Top+3,c.Width-24,c.Height-6);using(var b=new SolidBrush(number.Enabled?number.ForeColor:Theme.Muted))g.DrawString(number.Value.ToString("F"+number.DecimalPlaces),number.Font,b,c.Left+4,c.Top+3);}}
+                 var number=c as NumericUpDown;if(number!=null){using(var b=new SolidBrush(number.BackColor))g.FillRectangle(b,c.Left+3,c.Top+3,c.Width-24,c.Height-6);using(var b=new SolidBrush(number.Enabled?number.ForeColor:Theme.Muted))g.DrawString(number.Value.ToString("F"+number.DecimalPlaces),number.Font,b,c.Left+4,c.Top+3);}
+                 var combo=c as ComboBox;if(combo!=null){using(var b=new SolidBrush(combo.BackColor))g.FillRectangle(b,c.Left+3,c.Top+3,c.Width-23,c.Height-6);using(var b=new SolidBrush(combo.Enabled?combo.ForeColor:Theme.Muted))g.DrawString(combo.Text,combo.Font,b,c.Left+6,c.Top+3);}}
                 bitmap.Save(file,ImageFormat.Png);
             }
         }
@@ -353,16 +355,17 @@ namespace SonicLauncher
     sealed class LauncherForm : DarkForm
     {
         public const string WindowTitle="Sonic Adventure DX | Launcher";
-        readonly Game game; readonly ActionButton fast,native,play,settings,input,levels;
+        readonly Game game; readonly ActionButton fast,native,play,settings,input,levels,multiplayer;
         readonly System.Windows.Forms.Timer timer;
         bool fastMode=true, hiddenUntilExit;
         string levelFailure;
         Process running; StreamWriter log; string logPath;
+        MultiplayerProfileScope multiplayerProfiles;
         readonly object logLock=new object();
         string status="Ready for adventure";
-        public LauncherForm(Game game,bool preview) : base(WindowTitle,840,535,preview)
+        public LauncherForm(Game game,bool preview) : base(WindowTitle,840,607,preview)
         {
-            this.game=game;if(!preview)game.InitializeData();fastMode=new Ini(game.Preferences).Get("Launcher","mode","fast")!="native";
+            this.game=game;if(!preview){game.InitializeData();try{MultiplayerProfileScope.Recover(game);}catch(Exception ex){MessageBox.Show(this,ex.Message,"Controller recovery",MessageBoxButtons.OK,MessageBoxIcon.Warning);}}fastMode=new Ini(game.Preferences).Get("Launcher","mode","fast")!="native";
             var min=ButtonAt("\u2013",752,9,30,30,delegate{WindowState=FormWindowState.Minimized;});min.Quiet=true;min.TabStop=false;min.AccessibleName="Minimize";
             var close=ButtonAt("\u00d7",788,9,30,30,delegate{Close();});close.Quiet=true;close.CloseButton=true;close.AccessibleName="Close";
             fast=ButtonAt("Fast",24,297,390,64,delegate{SetMode(true);});fast.Subtitle="Smooth gameplay  \u00b7  Recommended";
@@ -373,12 +376,13 @@ namespace SonicLauncher
             ButtonAt("Saves folder",221,459,137,32,delegate{OpenFolder(Path.Combine(game.User,"GC"));}).Quiet=true;
             ButtonAt("Game logs",372,459,124,32,delegate{OpenFolder(Path.Combine(game.User,"Logs"));}).Quiet=true;
             levels=ButtonAt("Custom levels + Creator",570,459,246,32,delegate{using(var dialog=new LevelsForm(game,false))if(dialog.ShowDialog(this)==DialogResult.OK)Launch(dialog.SelectedLevel);});
+            multiplayer=ButtonAt("Multiplayer",24,503,792,56,delegate{using(var dialog=new MultiplayerForm(game,false))dialog.ShowDialog(this);UpdateMode();});
             AcceptButton=play; UpdateMode();
             string missing=game.Missing(); if(missing!=null) {status=missing; play.Enabled=false;}
             timer=new System.Windows.Forms.Timer(); timer.Interval=250;timer.Tick+=delegate{CheckGame();};timer.Start();
             Shown+=delegate{play.Focus();};
         }
-        void UpdateMode() { fast.Selected=fastMode;native.Selected=!fastMode;fast.Invalidate();native.Invalidate();Invalidate(); }
+        void UpdateMode() {var mode=MultiplayerOptions.Load(game);fast.Selected=fastMode||mode.Enabled;native.Selected=!fastMode&&!mode.Enabled;native.Enabled=running==null&&!mode.Enabled;fast.Subtitle=mode.Enabled?"Split screen uses Fast gameplay":"Smooth gameplay  \u00b7  Recommended";native.Subtitle=mode.Enabled?"Choose Single player to use Native":"Native DOL + module fallback";fast.Invalidate();native.Invalidate();multiplayer.Selected=mode.Enabled;multiplayer.Subtitle=mode.Enabled?"2 players | two Xbox controllers | top / bottom screens":"Single player | choose two-player split screen here";multiplayer.Invalidate();Invalidate(); }
         void SetMode(bool value)
         {
             fastMode=value;UpdateMode();
@@ -391,7 +395,7 @@ namespace SonicLauncher
             catch(Exception ex){MessageBox.Show(this,ex.Message,"Couldn't open folder",MessageBoxButtons.OK,MessageBoxIcon.Error);}
         }
         void AppendLog(object sender,DataReceivedEventArgs e)
-        {if(e.Data==null)return; lock(logLock) {if(e.Data.StartsWith("[levels] failed:"))levelFailure=e.Data.Substring(16).Trim();if(log!=null){log.WriteLine(e.Data);log.Flush();}}}
+        {if(e.Data==null)return; lock(logLock) {if(e.Data.StartsWith("[levels] failed:"))levelFailure=e.Data.Substring(16).Trim();if(e.Data.StartsWith("[multiplayer] failed:"))levelFailure=e.Data.Substring(21).Trim();if(log!=null){log.WriteLine(e.Data);log.Flush();}}}
         void Launch(LevelDocument customLevel=null)
         {
             if(running!=null)return;
@@ -406,38 +410,47 @@ namespace SonicLauncher
             try
             {
                 levelFailure=null;var inputOptions=InputProfiles.PrepareLaunch(game);
+                var multiplayerOptions=MultiplayerOptions.Load(game);bool sessionFast=fastMode||multiplayerOptions.Enabled;
                 string dir=Path.Combine(game.User,"Logs");Directory.CreateDirectory(dir);
                 logPath=Path.Combine(dir,"launcher-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff")+".log");
                 log=new StreamWriter(logPath,false,new UTF8Encoding(false));
-                log.WriteLine("Sonic Adventure DX launcher | "+(fastMode?"Fast":"Native")+" | "+DateTime.Now.ToString("O"));log.Flush();
+                log.WriteLine("Sonic Adventure DX launcher | "+(sessionFast?"Fast":"Native")+" | "+DateTime.Now.ToString("O"));log.Flush();
                 log.WriteLine("Input: "+(inputOptions.Controller?Xbox.Device(inputOptions.Slot):"Keyboard"));
                 var sessionGame=customLevel==null?game:LevelFiles.PlayGame(game);
+                if(multiplayerOptions.Enabled)
+                {
+                    var connected=new List<int>();for(int i=0;i<4;i++){Xbox.State pad;if(Xbox.Read(i,out pad))connected.Add(i);}
+                    multiplayerProfiles=new MultiplayerProfileScope(sessionGame,multiplayerOptions,connected);
+                    log.WriteLine("Split screen: player 1 = "+Xbox.Device(multiplayerProfiles.Slots[0])+", player 2 = "+Xbox.Device(multiplayerProfiles.Slots[1]));
+                }
                 string levelFile=customLevel==null?null:LevelFiles.Binary(game,customLevel);
                 if(customLevel!=null)log.WriteLine("Custom level: "+customLevel.Name+" | "+customLevel.Id);
-                running=new Process();running.StartInfo=sessionGame.StartInfo(fastMode,null,levelFile);
+                running=new Process();running.StartInfo=sessionGame.StartInfo(sessionFast,null,levelFile,multiplayerOptions.Enabled);
                 running.OutputDataReceived+=AppendLog;running.ErrorDataReceived+=AppendLog;
                 if(!running.Start())throw new IOException("The game process did not start.");
                 running.BeginOutputReadLine();running.BeginErrorReadLine();
-                play.Text="IN GAME";play.Enabled=false;fast.Enabled=false;native.Enabled=false;settings.Enabled=false;input.Enabled=false;levels.Enabled=false;
+                play.Text="IN GAME";play.Enabled=false;fast.Enabled=false;native.Enabled=false;settings.Enabled=false;input.Enabled=false;levels.Enabled=false;multiplayer.Enabled=false;
                 status="Adventure in progress";Invalidate();WindowState=FormWindowState.Minimized;
             }
             catch(Exception ex)
             {
-                if(running!=null){running.Dispose();running=null;}CloseLog();
+                if(running!=null){try{if(!running.HasExited){running.Kill();running.WaitForExit();}}catch(InvalidOperationException){}running.Dispose();running=null;}CloseLog();RestoreProfiles();
                 status="Couldn't start the game";Invalidate();
                 MessageBox.Show(this,ex.Message,"Sonic Adventure DX",MessageBoxButtons.OK,MessageBoxIcon.Error);
             }
         }
         void CloseLog(){lock(logLock){if(log!=null){log.Dispose();log=null;}}}
+        void RestoreProfiles(){if(multiplayerProfiles==null)return;var scope=multiplayerProfiles;multiplayerProfiles=null;try{scope.Dispose();}catch(Exception ex){MessageBox.Show(this,"The game closed, but controller settings could not be restored: "+ex.Message,"Controller settings",MessageBoxButtons.OK,MessageBoxIcon.Warning);}}
         void CheckGame()
         {
             if(running==null || !running.HasExited)return;
-            running.WaitForExit();int code=running.ExitCode;running.Dispose();running=null;CloseLog();
+            running.WaitForExit();int code=running.ExitCode;running.Dispose();running=null;CloseLog();RestoreProfiles();
             if(hiddenUntilExit){Close();return;}
-            play.Text="PLAY  \u2192";play.Enabled=true;fast.Enabled=true;native.Enabled=true;settings.Enabled=true;input.Enabled=true;levels.Enabled=true;
-            status=levelFailure!=null?"Custom level failed. Check Game logs.":code==0?"Ready for another adventure":"Game closed unexpectedly. Check Game logs.";
+            play.Text="PLAY  \u2192";play.Enabled=true;fast.Enabled=true;native.Enabled=true;settings.Enabled=true;input.Enabled=true;levels.Enabled=true;multiplayer.Enabled=true;
+            status=levelFailure!=null?"Game session failed. Check Game logs.":code==0?"Ready for another adventure":"Game closed unexpectedly. Check Game logs.";
             WindowState=FormWindowState.Normal;Show();Activate();Invalidate();
-            if(levelFailure!=null)MessageBox.Show(this,levelFailure,"Custom level could not start",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+            UpdateMode();
+            if(levelFailure!=null)MessageBox.Show(this,levelFailure,"Game session could not start",MessageBoxButtons.OK,MessageBoxIcon.Warning);
         }
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
@@ -476,11 +489,11 @@ namespace SonicLauncher
             Theme.Text(g,"DIRECTOR'S CUT",10,Theme.Gold,new RectangleF(104,193,271,27),FontStyle.Bold);
             Theme.Text(g,"Your next adventure starts here.",12,Color.FromArgb(198,219,250),new RectangleF(44,233,427,24));
             Theme.Text(g,"CHOOSE YOUR PACE",10,Theme.Muted,new RectangleF(24,274,650,19),FontStyle.Bold);
-            using(var pen=new Pen(Theme.Border))g.DrawLine(pen,24,505,816,505);
-            using(var b=new SolidBrush(game.Missing()==null?Color.FromArgb(90,221,161):Theme.Gold))g.FillEllipse(b,25,518,5,5);
-            Theme.Text(g,status,10,Theme.Muted,new RectangleF(40,510,538,22));
+            using(var pen=new Pen(Theme.Border))g.DrawLine(pen,24,577,816,577);
+            using(var b=new SolidBrush(game.Missing()==null?Color.FromArgb(90,221,161):Theme.Gold))g.FillEllipse(b,25,590,5,5);
+            Theme.Text(g,status,10,Theme.Muted,new RectangleF(40,582,538,22));
             var options=InputOptions.Load(game);
-            Theme.Text(g,(options.Controller?"XBOX":"KEYBOARD")+"  /  "+(fastMode?"FAST":"NATIVE"),10,Theme.Muted,new RectangleF(620,510,196,22),FontStyle.Bold);
+            bool split=MultiplayerOptions.Load(game).Enabled;Theme.Text(g,(split?"2 PLAYERS":options.Controller?"XBOX":"KEYBOARD")+"  /  "+(fastMode||split?"FAST":"NATIVE"),10,Theme.Muted,new RectangleF(620,582,196,22),FontStyle.Bold);
         }
     }
 
@@ -495,6 +508,7 @@ namespace SonicLauncher
             var game=new Game(root);
             if(args.Length==2&&args[0]=="--editor-preview"){using(var f=new LevelEditorForm(game,LevelDocument.Starter(),true))f.Render(args[1]);return 0;}
             if(args.Length==2&&args[0]=="--levels-preview"){using(var f=new LevelsForm(game,true))f.Render(args[1]);return 0;}
+            if(args.Length==2&&args[0]=="--multiplayer-preview"){using(var f=new MultiplayerForm(game,true))f.Render(args[1]);return 0;}
             if(args.Length==2&&args[0]=="--sample-level"){LevelFiles.Export(LevelDocument.Starter(),args[1]);return 0;}
             if(args.Length==3&&args[0]=="--compile-level"){var d=LevelFiles.Read(args[1]);var g=new Game(root,Path.GetDirectoryName(Path.GetFullPath(args[2])));string p=LevelFiles.Binary(g,d);File.Copy(p,args[2],true);return 0;}
             if(args.Length==2 && args[0]=="--write-icon")
@@ -509,6 +523,7 @@ namespace SonicLauncher
             if(args.Length==2 && args[0]=="--controller-smoke-test")return ControllerSmokeTest(game,args[1]);
             if(args.Length==2 && args[0]=="--controller-status")return ControllerStatus(args[1]);
             if(args.Length==2 && args[0]=="--controller-test")return ControllerTest(game,args[1]);
+            if(args.Length==2 && args[0]=="--multiplayer-test")return MultiplayerChecks.Run(game,args[1]);
             if(args.Length==2 && args[0]=="--self-test")return SelfTest(game,args[1]);
             if(args.Length==2 && args[0]=="--smoke-test")return SmokeTest(game,args[1]);
             string identity;
