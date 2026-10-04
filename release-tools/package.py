@@ -54,7 +54,7 @@ with zipfile.ZipFile(source_zip,"w",zipfile.ZIP_DEFLATED,compresslevel=6) as z:
   if p.suffix.lower() in [".dol",".rel",".rvz",".iso",".gcm",".sav"]:raise RuntimeError("Game data in runtime source: "+str(rel))
   overlay=ROOT/"native-port/ModernGekko"/rel
   z.write(overlay if overlay.is_file() else p,rel.as_posix())
- for new_header in ["sonic_enhancements.hpp","sonic_levels.hpp","sonic_multiplayer.hpp","sonic_split_renderer.hpp"]:
+ for new_header in ["sonic_enhancements.hpp","sonic_levels.hpp","sonic_multiplayer.hpp","sonic_split_renderer.hpp","sonic_coop_gameplay.hpp"]:
   if not (source_root/"src/runtime"/new_header).exists():z.write(ROOT/"native-port/ModernGekko/src/runtime"/new_header,"src/runtime/"+new_header)
  z.write(ROOT/"package.py","release-tools/package.py")
  z.write(ROOT/"BUILD.md","BUILD-SONIC.md")

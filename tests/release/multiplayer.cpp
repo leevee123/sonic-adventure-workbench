@@ -13,6 +13,11 @@ int main(){try{
   setup();MultiplayerSession m;for(int i=0;i<14;++i)m.Tick(read,write,call,true);require(!m.spawned&&allocations==0,"Spawned before player initialization settled");
   m.Tick(read,write,call,true);require(m.spawned&&allocations==1&&memory[partner+8]==1&&memory[partner+9]==0,"Second retail player allocation failed");require(memory[partner+32]==0x41500000,"Partner spawn must avoid overlap");
   m.Tick(read,write,call,true);require(allocations==1,"Duplicate player allocation");auto generation=m.generation;memory[0x8074a7c4]=2;m.Tick(read,write,call,true);require(!m.spawned&&m.generation>generation,"Stage change did not discard stale task state");
+  setup();MultiplayerSession section;allocations=0;for(int i=0;i<15;++i)section.Tick(read,write,call,true);generation=section.generation;
+  memory[MultiplayerSession::PlayerWorks+4]=partner;memory[MultiplayerSession::PlayerTasks+4]=partnerTask;memory[MultiplayerSession::PlayerPhysics+4]=0x807e6000;
+  memory[0x8074a7c4]=0x10001;memory[first+32]=0x42c80000;section.Tick(read,write,call,true);
+  require(section.spawned&&allocations==1&&section.generation==generation&&section.stage==0x10001,"Act transition destroyed a live partner or reallocated shared model resources");
+  require(memory[partner+32]==0x42e00000,"Act transition did not bring the partner to the new section");
   setup();MultiplayerSession companion;allocations=0;memory[MultiplayerSession::PlayerTasks+4]=partnerTask;memory[partner+8]=1;memory[partner+9]=2;
   for(int i=0;i<15;++i)companion.Tick(read,write,call,true);require(allocations==0&&memory[partnerTask+16]==MultiplayerSession::Text+0x10f9f0,"AI companion overwritten before normal teardown");
   for(int i=0;i<240;++i)companion.Tick(read,write,call,true);require(!companion.spawned&&companion.companion_wait==0,"Loading or pause refreshes incorrectly counted as cleanup attempts");

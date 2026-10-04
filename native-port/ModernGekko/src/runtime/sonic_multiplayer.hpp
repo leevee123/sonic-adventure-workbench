@@ -23,6 +23,15 @@ struct MultiplayerSession {
     // Initial co-op covers Sonic action stages. Hubs, cutscenes and bosses
     // retain their original single-player tasks and camera.
     if((current_stage&65535)<1||(current_stage&65535)>10){Reset();return;}
+    if(spawned && p==first_work && tp==first_task && (current_stage&65535)==(stage&65535) && current_stage!=stage){
+      // An act transition keeps the original player tasks alive. Destroying a
+      // second Sonic here also destroys shared character model resources.
+      stage=current_stage;
+      for(unsigned o=20;o<=40;o+=4)write(other_work+o,read(p+o,4),4);
+      auto bits=read(p+32,4);float x;std::memcpy(&x,&bits,4);x+=12;std::memcpy(&bits,&x,4);write(other_work+32,bits,4);
+      write(other_work,1,1);write(other_work+4,0,2);write(other_work+2,1,1);
+      const auto physics=read(PlayerPhysics+4,4);if(Pointer(physics))for(unsigned o=0x38;o<=0x40;o+=4)write(physics+o,0,4);
+    }
     if(p!=first_work||tp!=first_task||current_stage!=stage){Reset();first_work=p;first_task=tp;stage=current_stage;++generation;}
     if(spawned)return;
     if(++wait<15)return;

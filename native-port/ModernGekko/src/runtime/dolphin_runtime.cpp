@@ -34,6 +34,7 @@
 #include "sonic_levels.hpp"
 #include "sonic_multiplayer.hpp"
 #include "sonic_split_renderer.hpp"
+#include "sonic_coop_gameplay.hpp"
 #include "DiscIO/DirectoryBlob.h"
 #include "VideoCommon/OnScreenDisplay.h"
 #include "moderngekko/cpu_state.h"
@@ -534,6 +535,7 @@ struct Runtime::Impl {
   std::unique_ptr<sonic::LevelSession> custom_level;
   sonic::MultiplayerSession multiplayer;
   std::unique_ptr<sonic::SplitRenderer> split_renderer;
+  std::unique_ptr<sonic::CoopGameplay> coop_gameplay;
   std::string session_failure;
   std::jthread automation_thread;
 };
@@ -865,6 +867,7 @@ RuntimeRunResult Runtime::Run() {
     std::fprintf(stderr, "[sonic] enhancements disabled: unsupported game build\n");
   if(supported_sonic && m_impl->config.split_screen) {
     m_impl->split_renderer=std::make_unique<sonic::SplitRenderer>(Core::System::GetInstance(),m_impl->multiplayer);
+    m_impl->coop_gameplay=std::make_unique<sonic::CoopGameplay>(Core::System::GetInstance(),m_impl->multiplayer,*m_impl->split_renderer,bool(m_impl->custom_level));
     m_impl->split_renderer->failure=[this](const char* message){if(m_impl->session_failure.empty()){m_impl->session_failure=message;std::fprintf(stderr,"[multiplayer] failed: %s\n",message);}RequestStop();};
   }
   if (supported_sonic && (m_impl->config.widescreen || m_impl->config.instant_light_dash || m_impl->custom_level || m_impl->config.split_screen)) {
@@ -894,7 +897,7 @@ RuntimeRunResult Runtime::Run() {
           return sonic::GuestCall(system,address,arguments);
         };
         const bool was_spawned=m_impl->multiplayer.spawned;
-        try {m_impl->multiplayer.Tick(read,write,call,!m_impl->custom_level || m_impl->custom_level->spawned);}
+        try {if(!m_impl->split_renderer->InPass()&&!m_impl->coop_gameplay->InCall())m_impl->multiplayer.Tick(read,write,call,!m_impl->custom_level || m_impl->custom_level->spawned);}
         catch(const std::exception& e){m_impl->split_renderer->Fail(e.what());}
         if(!was_spawned&&m_impl->multiplayer.spawned)std::fprintf(stderr,"[multiplayer] second Sonic task=%08x work=%08x\n",m_impl->multiplayer.other_task,m_impl->multiplayer.other_work);
       }
@@ -907,6 +910,7 @@ RuntimeRunResult Runtime::Run() {
         if(!was_cleared && session.cleared){std::fprintf(stderr,"[levels] level cleared\n");OSD::AddMessage("Level clear! Returning to the launcher...",5000,OSD::Color::GREEN);}
       }
       if(m_impl->split_renderer)try{m_impl->split_renderer->Tick();}catch(const std::exception& e){m_impl->split_renderer->Fail(e.what());}
+      if(m_impl->coop_gameplay)try{m_impl->coop_gameplay->Tick();}catch(const std::exception& e){m_impl->split_renderer->Fail(e.what());}
     });
   }
   m_impl->present_hook =
@@ -942,7 +946,7 @@ RuntimeRunResult Runtime::Run() {
   Core::Shutdown(Core::System::GetInstance());
   m_impl->booted = false;
   m_impl->running = false;
-  m_impl->split_renderer.reset();
+  m_impl->coop_gameplay.reset();m_impl->split_renderer.reset();
   m_impl->sonic_hook={};
   if(!m_impl->session_failure.empty())return {RuntimeExitReason::Stopped,RuntimeError{RuntimeErrorCode::InvalidState,m_impl->session_failure}};
   return {};

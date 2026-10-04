@@ -1,6 +1,7 @@
 """Private, owned-game shared-world player prototype; never copies game data into releases."""
 import argparse,json,math,os,pathlib,struct,subprocess,time
-parser=argparse.ArgumentParser();parser.add_argument('output',type=pathlib.Path);parser.add_argument('--native',action='store_true');parser.add_argument('--stage',type=int,choices=range(1,11));parser.add_argument('--inspect-tasks',action='store_true');parser.add_argument('--transition',action='store_true');args=parser.parse_args()
+parser=argparse.ArgumentParser();parser.add_argument('output',type=pathlib.Path);parser.add_argument('--native',action='store_true');parser.add_argument('--stage',type=int,choices=range(1,11));parser.add_argument('--inspect-tasks',action='store_true');parser.add_argument('--transition',action='store_true');parser.add_argument('--coast',action='store_true');args=parser.parse_args()
+if args.coast and args.stage!=1:parser.error('--coast requires --stage 1')
 base=pathlib.Path(__file__).resolve().parent.parent;root=pathlib.Path('C:/games/sonic-adventure-workbench');out=args.output.resolve();out.mkdir();(out/'commands').mkdir()
 env={k.upper():v for k,v in os.environ.items()};env['MODERNGEKKO_STATICRECOMP']='1' if args.native else '0';env['PATH']='C:/Windows/System32;C:/Windows'
 runner=base/'native-port/bin/moderngekko-run.exe';seq=0
@@ -26,6 +27,9 @@ with (out/'runtime.log').open('w') as log:
   command('command=resume');command(f'command=pad_frames\nport={port}\nframes={n}'+''.join('\n'+k+'='+str(v) for k,v in pad.items()));command('command=pause')
  def pos(i):
   w=struct.unpack('>I',memory(0x807a8280+i*4,4))[0];return w,struct.unpack('>fff',memory(w+32,12))
+ def word(address,n=4):return int.from_bytes(memory(address,n),'big')
+ def teleport(i,xyz):
+  work=pos(i)[0];physics=word(0x807a8240+i*4);write(work+32,struct.pack('>fff',*xyz));write(physics+0x38,bytes(12));write(work,bytes([1,0,1]));write(work+4,bytes(2))
  checks={}
  def require(name,predicate,detail):
   checks[name]=detail
@@ -69,6 +73,43 @@ with (out/'runtime.log').open('w') as log:
    before_unpaused=pos(1);frames(10,port=1,main_y=.7)
    require('unpause_restores_player_two',math.dist(before_unpaused[1],pos(1)[1])>2,[before_unpaused,pos(1)])
    frames(1,port=1)
+  if args.coast:
+   first=pos(0);teleport(1,(20,4,4));frames(40,port=1,main_y=.7);frames(1,port=1)
+   snapshot=memory(0x807a0000,0x60000)
+   def peek(address,n=4):
+    offset=address-0x807a0000
+    return int.from_bytes(snapshot[offset:offset+n],'big') if 0<=offset<=len(snapshot)-n else 0
+   beach=int(__import__('re').search(r'water refraction disabled at ([0-9a-f]+)',(out/'runtime.log').read_text())[1],16)-0x1ab30
+   roots=[peek(0x807af168+i*4) for i in range(8)];seen=set();footprints=[]
+   def effect_chain(task):
+    while task and task not in seen and len(seen)<500:
+     seen.add(task);work=peek(task+32)
+     if peek(task+16)==beach+0x1404 and peek(work+1,1)==1:
+      buffer=peek(work+16);footprints.append(peek(buffer+0xaf4))
+     effect_chain(peek(task+12));task=peek(task)
+   for task in roots:effect_chain(task)
+   require('player_two_leaves_original_footprints',any(n>0 for n in footprints),footprints)
+   command('command=screenshot\npath='+str(out/'footprints.png'));frames(3,port=1)
+   # An ordinary ring over 2,000 units from the stationary first player.
+   teleport(1,(1940.61,170.7,964.32));frames(2,port=1)
+   ring_task=word(0x807aa61c+137*16+4)
+   require('distant_set_object_loads_for_player_two',0x80004000<=ring_task<0x817fff00 and word(ring_task+16)==0x802cc12c+0xeb7bc,hex(ring_task))
+   ring_work=word(ring_task+32);xyz=struct.unpack('>fff',memory(ring_work+32,12));rings=word(0x8074c7a8,2)
+   teleport(1,(xyz[0],xyz[1]-3,xyz[2]));frames(2,port=1)
+   require('player_two_ring_updates_shared_counter',word(0x8074c7a8,2)==rings+1,[rings,word(0x8074c7a8,2)])
+   queue=memory(0x807ae878,38*52)
+   sound=any(struct.unpack_from('>I',queue,i*52+16)[0]==7 and struct.unpack_from('>I',queue,i*52+4)[0]>0 for i in range(38))
+   require('player_two_ring_queues_original_sound',sound,sound)
+   lives=word(0x8074c7ad,1);teleport(1,(0,-35,1500));frames(8,port=1)
+   require('retail_pit_marks_second_player_dead',bool(word(word(0x807a8244)+6,2)&0x4000),pos(1))
+   frames(135,port=1);respawn=pos(1)
+   require('pit_respawn_costs_one_shared_life',word(0x8074c7ad,1)==lives-1 and respawn[1][1]>-25 and not(word(word(0x807a8244)+6,2)&0x4000),[lives,word(0x8074c7ad,1),respawn])
+   require('second_player_death_preserves_first_player',math.dist(first[1],pos(0)[1])<2,[first,pos(0)])
+   before_task=word(0x807a82a4);teleport(0,(5746,406,655));frames(180)
+   require('tunnel_loads_next_emerald_coast_section',word(0x8074a7c4,4)==0x10001 and word(0x807a82a4)==before_task,[memory(0x8074a7c4,4).hex(),hex(word(0x807a82a4))])
+   before=pos(1);frames(10,port=1,a=1)
+   require('second_player_jumps_after_tunnel',pos(1)[1][1]>before[1][1]+5,[before,pos(1)])
+   command('command=screenshot\npath='+str(out/'after-tunnel.png'));frames(3,port=1)
   if args.stage is None:
    write(b[0]+36,struct.pack('>f',9000));frames(12,port=1)
    recovered=pos(1);require('player_two_fall_recovery',recovered[1][1]>=9999 and math.dist(pos(0)[1],a[1])<2,recovered)

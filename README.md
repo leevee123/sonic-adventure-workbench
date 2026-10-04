@@ -1,4 +1,4 @@
-Sonic Adventure DX for Windows — recomp preview 0.6.0
+Sonic Adventure DX for Windows — recomp preview 0.6.1
 
 
 

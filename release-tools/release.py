@@ -1,4 +1,4 @@
-"""Create and audit the 0.6.0 release artifacts (game dump required)."""
+"""Create and audit the 0.6.1 release artifacts (game dump required)."""
 from pathlib import Path
 import hashlib, io, json, shutil, zipfile
 root=Path(__file__).resolve().parent
@@ -22,10 +22,10 @@ with zipfile.ZipFile(root/"Runtime.zip") as z:
         check_names(source.namelist(),"corresponding source")
         if len(source.namelist())!=len(set(source.namelist())):raise RuntimeError("Duplicate source archive entries")
         source_count=len(source.namelist())
-release=dist/"v0.6.0"
+release=dist/"v0.6.1"
 release.mkdir(exist_ok=True)
-shutil.copy2(root/"SonicAdventureDX-Setup.exe",release/"SonicAdventureDX-Setup-0.6.0.exe")
-shutil.copy2(root/"installer/payload/source/ModernGekko-Source.zip",release/"ModernGekko-Source-0.6.0.zip")
+shutil.copy2(root/"SonicAdventureDX-Setup.exe",release/"SonicAdventureDX-Setup-0.6.1.exe")
+shutil.copy2(root/"installer/payload/source/ModernGekko-Source.zip",release/"ModernGekko-Source-0.6.1.zip")
 for name in ["VERIFICATION.md","README.md","CHANGELOG.md","NATIVE-PORT.md","CUSTOM-LEVELS.md","MULTIPLAYER.md"]:shutil.copy2(root/name,release/name)
 shutil.copy2(root/"dist/Skyline-Sprint.sadxlevel",release/"Skyline-Sprint.sadxlevel")
 hashes={}

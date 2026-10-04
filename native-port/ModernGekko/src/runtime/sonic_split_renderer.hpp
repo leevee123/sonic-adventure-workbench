@@ -15,7 +15,7 @@ inline std::uint32_t GuestCall(Core::System& system,std::uint32_t address,std::a
   constexpr std::uint32_t sentinel=0x81800000;
   const auto stack=(ppc.gpr[1]-0x400)&~15u;
   if(!system.GetMemory().GetPointerForRange(stack-0x1000,0x1000))throw std::runtime_error("Multiplayer guest stack is unmapped.");
-  ppc.gpr[1]=stack;
+  ppc.gpr[1]=stack;ppc.gpr[6]=0;
   for(unsigned i=0;i<arguments.size();++i)ppc.gpr[3+i]=arguments[i];
   ppc.pc=address;ppc.npc=address+4;ppc.spr[SPR_LR]=sentinel;unsigned steps=0;
   std::array<std::uint32_t,64> trace{};
@@ -50,6 +50,8 @@ public:
   static float Float(std::uint32_t v){float f;std::memcpy(&f,&v,4);return f;}
   void Put(std::uint32_t a,float f){std::uint32_t v;std::memcpy(&v,&f,4);Write(a,v);}
   bool Ready()const {return players.spawned && MultiplayerSession::Pointer(Read(MultiplayerSession::PlayerPhysics+4)) && Read(MultiplayerSession::PlayerWorks)==players.first_work && Read(MultiplayerSession::PlayerWorks+4)==players.other_work && Read(players.other_work,1)!=0 && !(Read(0x8073f3d0,2)|Read(0x8073f3d2,2));}
+  bool InPass()const{return !frames.empty();}
+  std::uint32_t BeachText()const{return water_effect?water_effect-0x1ab30:0;}
   void Tick() {
     if(Read(MultiplayerSession::Main)!=1)return;
     if(!hooks) {
@@ -71,6 +73,11 @@ public:
       hooks=true;
     }
     if(!Ready())return;
+    for(unsigned i=0;i<2;++i){const auto stick=[&](unsigned o){int n=Read(0x8074c8e0+i*12+o,1);return n>127?n-256:n;};int x=stick(4),y=stick(5);
+      if(std::abs(x)>24)yaw[i]-=x*.0004f;
+      if(std::abs(y)>24)pitch[i]=std::clamp(pitch[i]+y*.0002f,.18f,1.1f);
+    }
+    if(InPass())return;
     // Emerald Coast's refraction copies the entire EFB and cannot sample an
     // individual split viewport. Keep ordinary water geometry, omit that effect.
     if(water_generation!=players.generation){
@@ -89,10 +96,6 @@ public:
       Write(stub,0x4e800020);Write(stub+4,0x60000000);
       HLE::PatchHostFunction(system,stub,Continue,HLE::HookType::Replace);allocation_owner=players.first_work;allocation_generation=players.generation;
       yaw={3.14159265f,3.14159265f};pitch={.48f,.48f};
-    }
-    for(unsigned i=0;i<2;++i){const auto stick=[&](unsigned o){int n=Read(0x8074c8e0+i*12+o,1);return n>127?n-256:n;};int x=stick(4),y=stick(5);
-      if(std::abs(x)>24)yaw[i]-=x*.0004f;
-      if(std::abs(y)>24)pitch[i]=std::clamp(pitch[i]+y*.0002f,.18f,1.1f);
     }
   }
   void Camera(unsigned view) {
@@ -124,9 +127,11 @@ public:
     // The two verified functions begin with stwu r1,-frame(r1).
     // Execute that displaced instruction, then resume the original guest code.
     const auto instruction=Read(entry);
-    if((instruction&0xffff0000u)!=0x94210000u)throw std::runtime_error("Unsupported task-loop entry instruction.");
-    auto& ppc=system.GetPPCState();const auto old=ppc.gpr[1];ppc.gpr[1]+=std::int16_t(instruction&65535);
-    Write(ppc.gpr[1],old);ppc.npc=entry+4;
+    auto& ppc=system.GetPPCState();
+    if((instruction&0xffff0000u)==0x94210000u){const auto old=ppc.gpr[1];ppc.gpr[1]+=std::int16_t(instruction&65535);Write(ppc.gpr[1],old);}
+    else if((instruction>>26)==32){const auto base=(instruction>>16)&31;ppc.gpr[(instruction>>21)&31]=Read((base?ppc.gpr[base]:0)+std::int16_t(instruction));}
+    else throw std::runtime_error("Unsupported multiplayer hook entry instruction.");
+    ppc.npc=entry+4;
   }
   void Viewport(int view) {
     auto& fifo=system.GetGPFifo();
@@ -171,6 +176,14 @@ public:
     auto& ppc=system.GetPPCState();
     if(frames.empty()||frames.back().sp!=ppc.gpr[1])throw std::runtime_error("Invalid split render continuation.");
     auto& f=frames.back();
+    // Loading a section can invalidate the transparent queue and players
+    // during the ordinary task traversal. Finish this pass without drawing
+    // unloaded resources; multiplayer maintenance runs after it returns.
+    if(!Ready()||Read(0x8074a7c4)!=players.stage||!MultiplayerSession::Pointer(Read(0x80661590))){
+      if(f.call)CameraReturned();
+      for(unsigned i=0;i<6;++i)Write(f.gx+0x43c+i*4,f.viewport[i]);
+      Viewport(-1);ppc.spr[SPR_LR]=f.lr;ppc.npc=f.lr;frames.pop_back();return;
+    }
     if(f.phase==0){CameraReturned();f.phase=1;Viewport(0);ppc.spr[SPR_LR]=stub;OriginalEntry(f.entry);}
     // Late/transparent draw calls store view matrices. Flush and clear their
     // queue while its matching viewport is still active, before the next view.
