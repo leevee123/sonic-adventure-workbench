@@ -46,6 +46,7 @@ void Usage() {
   std::cerr << "usage: " MODERNGEKKO_RUNNER_NAME
                " [--game <extracted-root>] [--module <path>]\n"
                "       [--user-dir <path>] [--title <text>] [--load-state <path>]\n"
+               "       [--custom-level <SALEVEL1 file>] (GXSE8P revision 0 only)\n"
                "       [--graphics <backend>] [--audio <backend>]\n"
                "       [--mods <directory>] [--no-mods]\n"
                "       [--wayland] [-X11] [--headless] [--allow-interpreter]\n"
@@ -179,6 +180,8 @@ int RunMain(int argc, char **argv) {
       }
       config.load_state_path = std::move(state);
     }
+    else if (arg == "--custom-level")
+      config.custom_level_path = StringToPath(value("--custom-level"));
     else if (arg == "--graphics")
       config.graphics.backend = value("--graphics");
     else if (arg == "--audio")
@@ -235,6 +238,10 @@ int RunMain(int argc, char **argv) {
       Usage();
       return 2;
     }
+  }
+  if (config.custom_level_path && (config.load_state_path || netplay_role)) {
+    std::cerr << "Custom levels require a fresh local session; save states and netplay are unsupported.\n";
+    return 2;
   }
   if (config.game_root.empty())
     config.game_root =

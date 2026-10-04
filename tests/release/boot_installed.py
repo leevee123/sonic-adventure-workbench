@@ -17,7 +17,7 @@ with (out/"runtime.log").open("w") as log:
    time.sleep(.025)
  def command(text):
   global sequence
-  sequence+=1;name=f"{sequence:04d}.txt";temporary=out/"commands"/(name+".pending");temporary.write_text(text+"\n");temporary.rename(out/"commands"/name)
+  sequence+=1;name=f"{sequence:04d}.txt";temporary=out/(name+".pending");temporary.write_text(text+"\n");temporary.rename(out/"commands"/name)
   wait(lambda:(out/"processed"/name).exists() or (out/"failed"/name).exists())
   if (out/"failed"/name).exists():raise RuntimeError("Runtime rejected command: "+text)
  try:

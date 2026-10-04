@@ -30,6 +30,9 @@
 #include "automation_protocol.hpp"
 #include "dolphin_runtime_internal.hpp"
 #include "sonic_enhancements.hpp"
+#include "sonic_levels.hpp"
+#include "DiscIO/DirectoryBlob.h"
+#include "VideoCommon/OnScreenDisplay.h"
 #include "moderngekko/cpu_state.h"
 #include "moderngekko/mod_loader.hpp"
 #include "moderngekko/module_loader.hpp"
@@ -523,6 +526,7 @@ struct Runtime::Impl {
   bool automation_registered = false;
   Common::EventHook sonic_hook;
   sonic::Enhancements sonic_state;
+  std::unique_ptr<sonic::LevelSession> custom_level;
   std::jthread automation_thread;
 };
 
@@ -604,6 +608,12 @@ RuntimeCreateResult Runtime::Create(RuntimeConfig config) {
 
   auto impl = std::make_unique<Impl>();
   impl->config = std::move(config);
+  if (impl->config.custom_level_path) {
+    if (inspected.metadata->disc_id != "GXSE8P" || inspected.metadata->dol_sha256 != "9b3eb6eb5e5529464d15fc51ba72924fef04dc876642224324d8659d9e7c59f2" || inspected.metadata->rel_sha256 != "5829b76f4a865a1994cbfc74095d7d1ea194f7cedf5311a44f6f9e6541d35820")
+      return {{}, RuntimeError{RuntimeErrorCode::InvalidGame,"Custom levels require GXSE8P revision 0."}};
+    try { impl->custom_level = std::make_unique<sonic::LevelSession>(sonic::Level::Load(*impl->config.custom_level_path)); }
+    catch (const std::exception& ex) { return {{}, RuntimeError{RuntimeErrorCode::InvalidGame,ex.what()}}; }
+  }
   impl->metadata = std::move(*inspected.metadata);
   impl->title = impl->config.window_title.value_or(
       "ModernGekko - " + impl->metadata.game_name + " [" +
@@ -808,6 +818,21 @@ RuntimeRunResult Runtime::Run() {
             RuntimeError{RuntimeErrorCode::BootFailed,
                          "Dolphin rejected the extracted disc"}};
   }
+  if (m_impl->custom_level) {
+    if (!std::holds_alternative<BootParameters::Disc>(boot->parameters))
+      return {RuntimeExitReason::BootFailed,RuntimeError{RuntimeErrorCode::BootFailed,"Custom level needs an extracted disc."}};
+    auto& disc=std::get<BootParameters::Disc>(boot->parameters);
+    // Per-session virtual files: no edits to the user's disc or a full copy.
+    disc.volume=DiscIO::CreateDisc(DiscIO::DirectoryBlobReader::Create(std::move(disc.volume),{},
+      [](std::vector<DiscIO::FSTBuilderNode>* nodes,DiscIO::FSTBuilderNode*) {
+        for(auto& node:*nodes){std::string name=node.m_filename;std::transform(name.begin(),name.end(),name.begin(),[](unsigned char c){return std::tolower(c);});
+          if(name=="set0100s.bin" || name=="cam0100s.bin") {
+            auto empty=std::make_shared<std::vector<u8>>(32,0);node.m_size=32;node.m_content=std::vector<DiscIO::BuilderContentSource>{{0,32,empty}};
+          }
+        }
+      }));
+    if(!disc.volume)return {RuntimeExitReason::BootFailed,RuntimeError{RuntimeErrorCode::BootFailed,"Could not build the custom level disc overlay."}};
+  }
   m_impl->state_hook =
       Core::AddOnStateChangedCallback([this](Core::State state) {
         if (state == Core::State::Uninitialized && m_impl->platform)
@@ -826,7 +851,7 @@ RuntimeRunResult Runtime::Run() {
       m_impl->metadata.rel_sha256 == "5829b76f4a865a1994cbfc74095d7d1ea194f7cedf5311a44f6f9e6541d35820";
   if ((m_impl->config.widescreen || m_impl->config.instant_light_dash) && !supported_sonic)
     std::fprintf(stderr, "[sonic] enhancements disabled: unsupported game build\n");
-  if (supported_sonic && (m_impl->config.widescreen || m_impl->config.instant_light_dash)) {
+  if (supported_sonic && (m_impl->config.widescreen || m_impl->config.instant_light_dash || m_impl->custom_level)) {
     m_impl->sonic_hook = GetVideoEvents().vi_end_field_event.Register([this] {
       auto& system = Core::System::GetInstance();
       auto& memory = system.GetMemory();
@@ -842,6 +867,14 @@ RuntimeRunResult Runtime::Run() {
       };
       if (m_impl->config.instant_light_dash && m_impl->sonic_state.LightDash(read, write))
         std::fprintf(stderr, "[sonic] instant light dash requested\n");
+      if (m_impl->custom_level) {
+        auto& session=*m_impl->custom_level;const bool was_injected=session.injected,was_cleared=session.cleared;
+        const auto copy=[&](u32 address,const std::vector<unsigned char>& data){auto* p=memory.GetPointerForRange(address,data.size());if(!p)throw std::runtime_error("Custom terrain range is not mapped.");std::memcpy(p,data.data(),data.size());};
+        try { if(session.Tick(read,write,copy))RequestStop(); }
+        catch(const std::exception& e){std::fprintf(stderr,"[levels] failed: %s\n",e.what());RequestStop();}
+        if(!was_injected && session.injected){std::fprintf(stderr,"[levels] terrain ready: REL=%08x pieces=%zu\n",session.base,session.level.pieces.size());OSD::AddMessage("Custom level | Z / Xbox RB: restart",8000);}
+        if(!was_cleared && session.cleared){std::fprintf(stderr,"[levels] level cleared\n");OSD::AddMessage("Level clear! Returning to the launcher...",5000,OSD::Color::GREEN);}
+      }
     });
   }
   m_impl->present_hook =

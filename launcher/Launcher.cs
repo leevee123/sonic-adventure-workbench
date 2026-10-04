@@ -187,7 +187,7 @@ namespace SonicLauncher
             if(!File.Exists(Config)&&File.Exists(defaults))File.Copy(defaults,Config,false);
         }
         static string Quote(string value) { return "\""+value+"\""; }
-        public ProcessStartInfo StartInfo(bool fast, string automation)
+        public ProcessStartInfo StartInfo(bool fast, string automation, string customLevel=null)
         {
             var info=new ProcessStartInfo(Runner);
             info.WorkingDirectory=Path.GetDirectoryName(Runner);
@@ -196,6 +196,7 @@ namespace SonicLauncher
             info.Arguments="--game "+Quote(Path.Combine(Root,"disc"))+" --module "+Quote(Module)+
                 " --user-dir "+Quote(User)+" --title \"Sonic Adventure DX\" --graphics Vulkan";
             if(automation!=null) info.Arguments+=" --headless --audio Null --automation-dir "+Quote(automation);
+            if(customLevel!=null)info.Arguments+=" --custom-level "+Quote(customLevel);
             info.EnvironmentVariables["MODERNGEKKO_STATICRECOMP"]=fast?"0":"1";
             // Diagnostics are opt-in for research, not extra work on every Play click.
             foreach(string key in new[]{"STATICRECOMP_TRACE_FILE","STATICRECOMP_DISPATCH_SAMPLES","SONIC_PAD_DIAGNOSTICS"})
@@ -287,7 +288,8 @@ namespace SonicLauncher
                 // Render each actual button through its normal paint path.
                 using(var g=Graphics.FromImage(bitmap))foreach(Control c in Controls)
                 using(var child=new Bitmap(c.Width,c.Height))
-                {c.DrawToBitmap(child,new Rectangle(Point.Empty,c.Size));g.DrawImageUnscaled(child,c.Location);}
+                {c.DrawToBitmap(child,new Rectangle(Point.Empty,c.Size));g.DrawImageUnscaled(child,c.Location);
+                 var number=c as NumericUpDown;if(number!=null){using(var b=new SolidBrush(number.BackColor))g.FillRectangle(b,c.Left+3,c.Top+3,c.Width-24,c.Height-6);using(var b=new SolidBrush(number.Enabled?number.ForeColor:Theme.Muted))g.DrawString(number.Value.ToString("F"+number.DecimalPlaces),number.Font,b,c.Left+4,c.Top+3);}}
                 bitmap.Save(file,ImageFormat.Png);
             }
         }
@@ -351,9 +353,10 @@ namespace SonicLauncher
     sealed class LauncherForm : DarkForm
     {
         public const string WindowTitle="Sonic Adventure DX | Launcher";
-        readonly Game game; readonly ActionButton fast,native,play,settings,input;
+        readonly Game game; readonly ActionButton fast,native,play,settings,input,levels;
         readonly System.Windows.Forms.Timer timer;
         bool fastMode=true, hiddenUntilExit;
+        string levelFailure;
         Process running; StreamWriter log; string logPath;
         readonly object logLock=new object();
         string status="Ready for adventure";
@@ -369,6 +372,7 @@ namespace SonicLauncher
             input=ButtonAt("Controls",24,459,183,32,delegate{using(var dialog=new InputForm(game,false)) dialog.ShowDialog(this);});input.Quiet=true;
             ButtonAt("Saves folder",221,459,137,32,delegate{OpenFolder(Path.Combine(game.User,"GC"));}).Quiet=true;
             ButtonAt("Game logs",372,459,124,32,delegate{OpenFolder(Path.Combine(game.User,"Logs"));}).Quiet=true;
+            levels=ButtonAt("Custom levels + Creator",570,459,246,32,delegate{using(var dialog=new LevelsForm(game,false))if(dialog.ShowDialog(this)==DialogResult.OK)Launch(dialog.SelectedLevel);});
             AcceptButton=play; UpdateMode();
             string missing=game.Missing(); if(missing!=null) {status=missing; play.Enabled=false;}
             timer=new System.Windows.Forms.Timer(); timer.Interval=250;timer.Tick+=delegate{CheckGame();};timer.Start();
@@ -387,8 +391,8 @@ namespace SonicLauncher
             catch(Exception ex){MessageBox.Show(this,ex.Message,"Couldn't open folder",MessageBoxButtons.OK,MessageBoxIcon.Error);}
         }
         void AppendLog(object sender,DataReceivedEventArgs e)
-        {if(e.Data==null)return; lock(logLock) {if(log!=null){log.WriteLine(e.Data);log.Flush();}}}
-        void Launch()
+        {if(e.Data==null)return; lock(logLock) {if(e.Data.StartsWith("[levels] failed:"))levelFailure=e.Data.Substring(16).Trim();if(log!=null){log.WriteLine(e.Data);log.Flush();}}}
+        void Launch(LevelDocument customLevel=null)
         {
             if(running!=null)return;
             string missing=game.Missing(); if(missing!=null){status=missing;Invalidate();return;}
@@ -401,17 +405,20 @@ namespace SonicLauncher
             }
             try
             {
-                var inputOptions=InputProfiles.PrepareLaunch(game);
+                levelFailure=null;var inputOptions=InputProfiles.PrepareLaunch(game);
                 string dir=Path.Combine(game.User,"Logs");Directory.CreateDirectory(dir);
                 logPath=Path.Combine(dir,"launcher-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff")+".log");
                 log=new StreamWriter(logPath,false,new UTF8Encoding(false));
                 log.WriteLine("Sonic Adventure DX launcher | "+(fastMode?"Fast":"Native")+" | "+DateTime.Now.ToString("O"));log.Flush();
                 log.WriteLine("Input: "+(inputOptions.Controller?Xbox.Device(inputOptions.Slot):"Keyboard"));
-                running=new Process();running.StartInfo=game.StartInfo(fastMode,null);
+                var sessionGame=customLevel==null?game:LevelFiles.PlayGame(game);
+                string levelFile=customLevel==null?null:LevelFiles.Binary(game,customLevel);
+                if(customLevel!=null)log.WriteLine("Custom level: "+customLevel.Name+" | "+customLevel.Id);
+                running=new Process();running.StartInfo=sessionGame.StartInfo(fastMode,null,levelFile);
                 running.OutputDataReceived+=AppendLog;running.ErrorDataReceived+=AppendLog;
                 if(!running.Start())throw new IOException("The game process did not start.");
                 running.BeginOutputReadLine();running.BeginErrorReadLine();
-                play.Text="IN GAME";play.Enabled=false;fast.Enabled=false;native.Enabled=false;settings.Enabled=false;input.Enabled=false;
+                play.Text="IN GAME";play.Enabled=false;fast.Enabled=false;native.Enabled=false;settings.Enabled=false;input.Enabled=false;levels.Enabled=false;
                 status="Adventure in progress";Invalidate();WindowState=FormWindowState.Minimized;
             }
             catch(Exception ex)
@@ -427,9 +434,10 @@ namespace SonicLauncher
             if(running==null || !running.HasExited)return;
             running.WaitForExit();int code=running.ExitCode;running.Dispose();running=null;CloseLog();
             if(hiddenUntilExit){Close();return;}
-            play.Text="PLAY  \u2192";play.Enabled=true;fast.Enabled=true;native.Enabled=true;settings.Enabled=true;input.Enabled=true;
-            status=code==0?"Ready for another adventure":"Game closed unexpectedly. Check Game logs.";
+            play.Text="PLAY  \u2192";play.Enabled=true;fast.Enabled=true;native.Enabled=true;settings.Enabled=true;input.Enabled=true;levels.Enabled=true;
+            status=levelFailure!=null?"Custom level failed. Check Game logs.":code==0?"Ready for another adventure":"Game closed unexpectedly. Check Game logs.";
             WindowState=FormWindowState.Normal;Show();Activate();Invalidate();
+            if(levelFailure!=null)MessageBox.Show(this,levelFailure,"Custom level could not start",MessageBoxButtons.OK,MessageBoxIcon.Warning);
         }
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
@@ -485,6 +493,10 @@ namespace SonicLauncher
             // Build/test commands may run from a temporary directory.
             if(args.Length>=2 && args[0]=="--root"){root=args[1];args=args.Skip(2).ToArray();}
             var game=new Game(root);
+            if(args.Length==2&&args[0]=="--editor-preview"){using(var f=new LevelEditorForm(game,LevelDocument.Starter(),true))f.Render(args[1]);return 0;}
+            if(args.Length==2&&args[0]=="--levels-preview"){using(var f=new LevelsForm(game,true))f.Render(args[1]);return 0;}
+            if(args.Length==2&&args[0]=="--sample-level"){LevelFiles.Export(LevelDocument.Starter(),args[1]);return 0;}
+            if(args.Length==3&&args[0]=="--compile-level"){var d=LevelFiles.Read(args[1]);var g=new Game(root,Path.GetDirectoryName(Path.GetFullPath(args[2])));string p=LevelFiles.Binary(g,d);File.Copy(p,args[2],true);return 0;}
             if(args.Length==2 && args[0]=="--write-icon")
             {using(var icon=Theme.MakeIcon())using(var file=File.Create(args[1]))icon.Save(file);return 0;}
             if(args.Length==2 && args[0]=="--preview")

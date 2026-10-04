@@ -41,7 +41,7 @@ for p in (donor/"GXRuntime/src/core").glob("*.h"):
  copy(p,pathlib.Path("installer/module-support/core")/p.name)
 for p in (donor/"Source/Core/Core/PowerPC/StaticRecomp").glob("*.h"):
  copy(p,pathlib.Path("installer/module-support/abi")/p.name)
-for file in ["README.md","THIRD_PARTY.md","VERIFICATION.md","CHANGELOG.md","NATIVE-PORT.md"]:copy(ROOT/file,pathlib.Path(file))
+for file in ["README.md","THIRD_PARTY.md","VERIFICATION.md","CHANGELOG.md","NATIVE-PORT.md","CUSTOM-LEVELS.md"]:copy(ROOT/file,pathlib.Path(file))
 copy(WB/"native-port/moderngekko-pin.txt",pathlib.Path("native-port/moderngekko-pin.txt"))
 (PAYLOAD/"native-port/runtime-user").mkdir(parents=True,exist_ok=True)
 (PAYLOAD/"native-port/runtime-user/config.ini").write_text("[Video]\nresolution=1920x1080\nfullscreen=false\nshow_fps_in_title=true\nwidescreen=false\n[Gameplay]\ninstant_light_dash=false\n[Input]\ncontroller=keyboard\n")
@@ -54,7 +54,8 @@ with zipfile.ZipFile(source_zip,"w",zipfile.ZIP_DEFLATED,compresslevel=6) as z:
   if p.suffix.lower() in [".dol",".rel",".rvz",".iso",".gcm",".sav"]:raise RuntimeError("Game data in runtime source: "+str(rel))
   overlay=ROOT/"native-port/ModernGekko"/rel
   z.write(overlay if overlay.is_file() else p,rel.as_posix())
- if not (source_root/"src/runtime/sonic_enhancements.hpp").exists():z.write(ROOT/"native-port/ModernGekko/src/runtime/sonic_enhancements.hpp","src/runtime/sonic_enhancements.hpp")
+ for new_header in ["sonic_enhancements.hpp","sonic_levels.hpp"]:
+  if not (source_root/"src/runtime"/new_header).exists():z.write(ROOT/"native-port/ModernGekko/src/runtime"/new_header,"src/runtime/"+new_header)
  z.write(ROOT/"package.py","release-tools/package.py")
  z.write(ROOT/"BUILD.md","BUILD-SONIC.md")
  z.write(ROOT/"VERIFICATION.md","VERIFICATION-SONIC.md")
@@ -64,6 +65,8 @@ with zipfile.ZipFile(source_zip,"w",zipfile.ZIP_DEFLATED,compresslevel=6) as z:
  z.write(ROOT/"tests/UpdateChecks.cs","sonic-tests/UpdateChecks.cs")
  z.write(ROOT/"tests/RegistrationChecks.cs","sonic-tests/RegistrationChecks.cs")
  z.write(ROOT/"tests/boot_installed.py","sonic-tests/boot_installed.py")
+ for name in ["LevelChecks.cs","levels.cpp","custom_level_installed.py"]:z.write(ROOT/"tests"/name,"sonic-tests/"+name)
+ z.write(ROOT/"CUSTOM-LEVELS.md","CUSTOM-LEVELS-SONIC.md")
  z.write(ROOT/"release.py","release-tools/release.py")
  z.write(ROOT/"CHANGELOG.md","CHANGELOG-SONIC.md")
  z.write(ROOT/"NATIVE-PORT.md","NATIVE-PORT-SONIC.md")

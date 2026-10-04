@@ -1,7 +1,7 @@
 {
-  "release": "v0.4.0",
-  "asset": "ModernGekko-Source-0.4.0.zip",
-  "sha256": "08341f95176b179e03eb2ad149ed52dc2daad364375713a9a90d62ed592dc323",
-  "files": 28236,
+  "release": "v0.5.0",
+  "asset": "ModernGekko-Source-0.5.0.zip",
+  "sha256": "815c0ce4b4034ab3d15f9357024010df77f5cbeaac33cd134b4c79592bd809f4",
+  "files": 28243,
   "game_data_in_source_archive": false
 }

@@ -76,6 +76,7 @@ struct RuntimeConfig
   std::optional<std::string> window_title;
   // Boot straight into a savestate instead of from the title screen.
   std::optional<std::filesystem::path> load_state_path;
+  std::optional<std::filesystem::path> custom_level_path;
   AutomationSettings automation;
 };
 
