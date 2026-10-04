@@ -8,7 +8,7 @@ on:
 
       source_sha256:
 
-        description: SHA256 of ModernGekko-Source-0.5.0.zip from the reviewed release
+        description: SHA256 of ModernGekko-Source-0.6.0.zip from the reviewed release
 
         required: true
 
@@ -54,11 +54,11 @@ jobs:
 
           releases=api(f'repos/{repo}/releases?per_page=100')
 
-          release=next(r for r in releases if r['tag_name']=='v0.5.0')
+          release=next(r for r in releases if r['tag_name']=='v0.6.0')
 
           assets={a['name']:a for a in release['assets']}
 
-          source=assets['ModernGekko-Source-0.5.0.zip']
+          source=assets['ModernGekko-Source-0.6.0.zip']
 
           temp=pathlib.Path(tempfile.mkdtemp());bundle=temp/'source.zip'
 
@@ -102,7 +102,7 @@ jobs:
 
                   elif rel.parts[0]=='release-tools':target=root/'release-tools'/pathlib.Path(*rel.parts[1:])
 
-                  elif name in {'BUILD-SONIC.md','VERIFICATION-SONIC.md','CHANGELOG-SONIC.md','NATIVE-PORT-SONIC.md','CUSTOM-LEVELS-SONIC.md'}:target=root/'docs'/'pc-port'/name
+                  elif name in {'BUILD-SONIC.md','VERIFICATION-SONIC.md','CHANGELOG-SONIC.md','NATIVE-PORT-SONIC.md','CUSTOM-LEVELS-SONIC.md','MULTIPLAYER-SONIC.md'}:target=root/'docs'/'pc-port'/name
 
                   else:target=runtime/pathlib.Path(*rel.parts)
 
@@ -118,7 +118,7 @@ jobs:
 
           if readme.get('digest'):assert readme['digest']=='sha256:'+hashlib.sha256(target.read_bytes()).hexdigest()
 
-          (root/'docs'/'pc-port'/'source-provenance.json').write_text(json.dumps({'release':'v0.5.0','asset':source['name'],'sha256':expected,'files':len(names),'game_data_in_source_archive':False},indent=2)+'\n')
+          (root/'docs'/'pc-port'/'source-provenance.json').write_text(json.dumps({'release':'v0.6.0','asset':source['name'],'sha256':expected,'files':len(names),'game_data_in_source_archive':False},indent=2)+'\n')
 
           (temp/'release-id.txt').write_text(str(release['id']))
 
@@ -136,7 +136,7 @@ jobs:
 
           git add native-port/ModernGekko launcher tests/release release-tools docs/pc-port README.md
 
-          if ! git diff --cached --quiet; then git commit -m 'Add custom level library, terrain runtime and visual level creator'; git push origin HEAD:main; fi
+          if ! git diff --cached --quiet; then git commit -m 'Add experimental shared-world split screen and two-controller launcher'; git push origin HEAD:main; fi
 
           python3 - <<'PY'
 
@@ -144,7 +144,7 @@ jobs:
 
           repo=os.environ['GH_REPO'];releases=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases?per_page=100']))
 
-          release=next(r for r in releases if r['tag_name']=='v0.5.0')
+          release=next(r for r in releases if r['tag_name']=='v0.6.0')
 
           assert release['draft'],'Publish only after the source import has completed'
 
@@ -152,7 +152,6 @@ jobs:
 
           subprocess.run(['gh','api','--method','PATCH',f'repos/{repo}/releases/{release["id"]}','-f','target_commitish='+sha],check=True,stdout=subprocess.DEVNULL)
 
-          print('Draft v0.5.0 source commit:',sha)
+          print('Draft v0.6.0 source commit:',sha)
 
           PY
-
