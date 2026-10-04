@@ -1,79 +1,158 @@
 name: Import verified PC installer source
+
 on:
+
   workflow_dispatch:
+
     inputs:
+
       source_sha256:
-        description: SHA256 of ModernGekko-Source-0.4.0.zip from the reviewed release
+
+        description: SHA256 of ModernGekko-Source-0.5.0.zip from the reviewed release
+
         required: true
+
         type: string
+
 permissions:
+
   contents: write
+
 jobs:
+
   import:
+
     runs-on: ubuntu-latest
+
     timeout-minutes: 20
+
     env:
+
       GH_TOKEN: ${{ github.token }}
+
       GH_REPO: ${{ github.repository }}
+
       EXPECTED_SOURCE_SHA256: ${{ inputs.source_sha256 }}
+
     steps:
+
       - uses: actions/checkout@v4
+
       - name: Verify and import corresponding runtime and installer source
+
         run: |
+
           python3 - <<'PY'
+
           import hashlib,json,os,pathlib,shutil,subprocess,tempfile,zipfile
+
           repo=os.environ['GH_REPO'];root=pathlib.Path.cwd().resolve()
+
           def api(path):
+
               return json.loads(subprocess.check_output(['gh','api',path]))
+
           releases=api(f'repos/{repo}/releases?per_page=100')
-          release=next(r for r in releases if r['tag_name']=='v0.4.0')
+
+          release=next(r for r in releases if r['tag_name']=='v0.5.0')
+
           assets={a['name']:a for a in release['assets']}
-          source=assets['ModernGekko-Source-0.4.0.zip']
+
+          source=assets['ModernGekko-Source-0.5.0.zip']
+
           temp=pathlib.Path(tempfile.mkdtemp());bundle=temp/'source.zip'
+
           with bundle.open('wb') as output:
+
               subprocess.run(['gh','api',f'repos/{repo}/releases/assets/{source["id"]}','-H','Accept: application/octet-stream'],stdout=output,check=True)
+
           expected=os.environ['EXPECTED_SOURCE_SHA256'].strip().lower()
+
           assert len(expected)==64 and hashlib.sha256(bundle.read_bytes()).hexdigest()==expected,'Source checksum differs from reviewed artifact'
+
           if source.get('digest'):assert source['digest']=='sha256:'+expected
+
           with zipfile.ZipFile(bundle) as archive:
+
               names=archive.namelist();assert len(names)==len(set(names)),'Duplicate source entries'
+
               for name in names:
+
                   rel=pathlib.PurePosixPath(name)
+
                   assert not rel.is_absolute() and '..' not in rel.parts and '.git' not in rel.parts
+
                   assert rel.suffix.lower() not in {'.rvz','.iso','.gcm','.dol','.rel','.sav','.gci','.pvm','.dll'}
+
                   if rel.suffix.lower()=='.exe':assert name in {'vendor/dolphin/Externals/gettext/msgfmt.exe','vendor/dolphin/Externals/tinygltf/tinygltf/tools/windows/premake5.exe','vendor/dolphin/Externals/VulkanMemoryAllocator/bin/VmaSample_Release_vs2022.exe'}
+
               runtime=root/'native-port'/'ModernGekko'
+
               assert runtime.resolve().is_relative_to(root) and not (runtime/'.git').exists()
+
               if runtime.exists():shutil.rmtree(runtime)
+
               for name in names:
+
                   rel=pathlib.PurePosixPath(name)
+
                   if rel.parts[0]=='sonic-launcher':target=root/'launcher'/pathlib.Path(*rel.parts[1:])
+
                   elif rel.parts[0]=='sonic-tests':target=root/'tests'/'release'/pathlib.Path(*rel.parts[1:])
+
                   elif rel.parts[0]=='release-tools':target=root/'release-tools'/pathlib.Path(*rel.parts[1:])
-                  elif name in {'BUILD-SONIC.md','VERIFICATION-SONIC.md','CHANGELOG-SONIC.md','NATIVE-PORT-SONIC.md'}:target=root/'docs'/'pc-port'/name
+
+                  elif name in {'BUILD-SONIC.md','VERIFICATION-SONIC.md','CHANGELOG-SONIC.md','NATIVE-PORT-SONIC.md','CUSTOM-LEVELS-SONIC.md'}:target=root/'docs'/'pc-port'/name
+
                   else:target=runtime/pathlib.Path(*rel.parts)
+
                   assert target.resolve().is_relative_to(root)
+
                   target.parent.mkdir(parents=True,exist_ok=True)
+
                   with archive.open(name) as src,target.open('wb') as dst:shutil.copyfileobj(src,dst)
+
           readme=assets['README.md'];target=root/'README.md'
+
           with target.open('wb') as output:subprocess.run(['gh','api',f'repos/{repo}/releases/assets/{readme["id"]}','-H','Accept: application/octet-stream'],stdout=output,check=True)
+
           if readme.get('digest'):assert readme['digest']=='sha256:'+hashlib.sha256(target.read_bytes()).hexdigest()
-          (root/'docs'/'pc-port'/'source-provenance.json').write_text(json.dumps({'release':'v0.4.0','asset':source['name'],'sha256':expected,'files':len(names),'game_data_in_source_archive':False},indent=2)+'\n')
+
+          (root/'docs'/'pc-port'/'source-provenance.json').write_text(json.dumps({'release':'v0.5.0','asset':source['name'],'sha256':expected,'files':len(names),'game_data_in_source_archive':False},indent=2)+'\n')
+
           (temp/'release-id.txt').write_text(str(release['id']))
+
           print(f'Imported {len(names)} verified corresponding-source files.')
+
           PY
+
       - name: Commit source and pin the draft release to the source commit
+
         run: |
+
           git config user.name 'github-actions[bot]'
+
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
           git add native-port/ModernGekko launcher tests/release release-tools docs/pc-port README.md
-          if ! git diff --cached --quiet; then git commit -m 'Package Windows preview 0.4.0 with safe updates and save-preserving uninstall'; git push origin HEAD:main; fi
+
+          if ! git diff --cached --quiet; then git commit -m 'Add custom level library, terrain runtime and visual level creator'; git push origin HEAD:main; fi
+
           python3 - <<'PY'
+
           import json,os,subprocess
+
           repo=os.environ['GH_REPO'];releases=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/releases?per_page=100']))
-          release=next(r for r in releases if r['tag_name']=='v0.4.0')
+
+          release=next(r for r in releases if r['tag_name']=='v0.5.0')
+
           assert release['draft'],'Publish only after the source import has completed'
+
           sha=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+
           subprocess.run(['gh','api','--method','PATCH',f'repos/{repo}/releases/{release["id"]}','-f','target_commitish='+sha],check=True,stdout=subprocess.DEVNULL)
-          print('Draft v0.4.0 source commit:',sha)
+
+          print('Draft v0.5.0 source commit:',sha)
+
           PY
+
